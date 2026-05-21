@@ -46,6 +46,12 @@ async function sendFallbackChat(config, message, reason) {
 }
 
 export async function handleCustomerMessage(config, message) {
+  await sendText(
+    config,
+    message.from,
+    "Haan bhai, ThreadIQ AI live hai. Main tumhara message samajh raha hoon, catalog connect hote hi products/images bhi bhej dunga.",
+  );
+
   let shops;
   try {
     shops = await listShops(config);
