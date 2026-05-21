@@ -130,15 +130,14 @@ export async function handleCustomerMessage(config, message) {
 
   await sendText(config, message.from, `${shop.name} se top options bhej raha hoon. Jo pasand aaye uska size bol dena.`);
   for (const item of captions) {
-    if (item.product.image_url) {
-      await sendImage(config, message.from, item.product.image_url, item.caption);
-    } else {
-      await sendText(config, message.from, item.caption);
-    }
+    const captionWithLink = item.product.image_url
+      ? `${item.caption}\n\nImage: ${item.product.image_url}`
+      : item.caption;
+    await sendText(config, message.from, captionWithLink);
     await logWhatsappMessage(config, {
       customerWhatsapp: message.from,
       direction: "outbound",
-      body: item.caption,
+      body: captionWithLink,
       shopId: shop.id,
       rawPayload: { product_id: item.product.id },
     });
