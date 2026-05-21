@@ -73,7 +73,7 @@ WHATSAPP_PHONE_NUMBER_ID=
 WHATSAPP_ACCESS_TOKEN=
 WHATSAPP_VERIFY_TOKEN=
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 Create the extra WhatsApp AI tables with:
@@ -121,7 +121,7 @@ WHATSAPP_PHONE_NUMBER_ID
 WHATSAPP_ACCESS_TOKEN
 WHATSAPP_VERIFY_TOKEN
 GEMINI_API_KEY
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 After Railway gives you a public domain, set Meta WhatsApp webhook callback URL to:
