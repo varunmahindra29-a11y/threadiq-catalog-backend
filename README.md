@@ -102,6 +102,14 @@ GET/POST http://localhost:8787/webhooks/whatsapp
 
 For production, expose the backend through HTTPS and set the same `WHATSAPP_VERIFY_TOKEN` in Meta's webhook setup. The backend matches shop names from the `shops` table, fetches active in-stock products, uses Gemini to write Hinglish salesman captions, sends WhatsApp image messages, and saves leads when customers show buying interest.
 
+Seed sample products:
+
+```bash
+npm run seed:samples
+```
+
+This inserts sample clothing products with public image URLs into the existing `products` table.
+
 ## Deploy On Railway
 
 Railway deploys this repo as one Node service. The production start command is:

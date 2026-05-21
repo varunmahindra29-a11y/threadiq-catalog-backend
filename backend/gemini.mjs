@@ -3,6 +3,7 @@ function compactProduct(product) {
     id: product.id,
     name: product.name,
     category: product.category,
+    description: product.description,
     price: Number(product.price || 0),
     stock: Number(product.stock || 0),
     sizes: product.sizes || [],

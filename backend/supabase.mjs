@@ -1,10 +1,13 @@
 function createHeaders(serviceRoleKey) {
-  return {
+  const headers = {
     apikey: serviceRoleKey,
-    Authorization: `Bearer ${serviceRoleKey}`,
     "Content-Type": "application/json",
     Prefer: "return=representation",
   };
+  if (!serviceRoleKey.startsWith("sb_")) {
+    headers.Authorization = `Bearer ${serviceRoleKey}`;
+  }
+  return headers;
 }
 
 function endpoint(config, path) {
