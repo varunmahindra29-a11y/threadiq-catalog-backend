@@ -33,7 +33,22 @@ function ownerAlert(shop, customerWhatsapp, customerMessage, products) {
 }
 
 export async function handleCustomerMessage(config, message) {
-  const shops = await listShops(config);
+  let shops;
+  try {
+    shops = await listShops(config);
+  } catch (error) {
+    console.error(`Supabase shops lookup failed: ${error.message}`);
+    const reply = "Bhai abhi shop catalog connect nahi ho paa raha. Thodi der me try karo, ya shop ka naam/requirement bhej do, owner ko check karwa denge.";
+    await sendText(config, message.from, reply);
+    return { status: "catalog_unavailable" };
+  }
+
+  if (!shops.length) {
+    const reply = "Bhai abhi catalog me shops add nahi hui hain. Shop owner ko products upload karne honge, tab main images aur options bhej paunga.";
+    await sendText(config, message.from, reply);
+    return { status: "no_shops" };
+  }
+
   const shop = findShopByMessage(shops, message.text);
 
   await logWhatsappMessage(config, {
@@ -56,7 +71,16 @@ export async function handleCustomerMessage(config, message) {
     return { status: "shop_not_found" };
   }
 
-  const products = await listProductsForShop(config, shop.id);
+  let products;
+  try {
+    products = await listProductsForShop(config, shop.id);
+  } catch (error) {
+    console.error(`Supabase products lookup failed: ${error.message}`);
+    const reply = `${shop.name} ka catalog abhi load nahi ho paa raha. Aap requirement bhej do, main owner ko connect karwa deta hoon.`;
+    await sendText(config, message.from, reply);
+    return { status: "products_unavailable", shopId: shop.id };
+  }
+
   const matchedProducts = rankProducts(products, message.text, 3);
 
   if (!matchedProducts.length) {
@@ -128,7 +152,17 @@ export async function handleWhatsappPayload(config, payload) {
   const messages = getTextMessages(payload);
   const results = [];
   for (const message of messages) {
-    results.push(await handleCustomerMessage(config, message));
+    try {
+      results.push(await handleCustomerMessage(config, message));
+    } catch (error) {
+      console.error(`Message handling failed: ${error.message}`);
+      try {
+        await sendText(config, message.from, "Bhai bot me temporary issue aa gaya. Aap message dobara bhejo ya shop owner se direct connect karwa denge.");
+      } catch (sendError) {
+        console.error(`Fallback WhatsApp send failed: ${sendError.message}`);
+      }
+      results.push({ status: "message_failed" });
+    }
   }
   return results;
 }
