@@ -16,9 +16,19 @@ try {
 
 const app = express();
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const recentEvents = [];
 
 app.use(express.json({ limit: "2mb" }));
 app.use(express.static(root));
+
+function recordEvent(type, data = {}) {
+  recentEvents.unshift({
+    type,
+    at: new Date().toISOString(),
+    ...data,
+  });
+  recentEvents.splice(50);
+}
 
 function requireDebugToken(request, response, next) {
   const token = request.get("x-debug-token");
@@ -73,6 +83,13 @@ app.get("/debug/config", requireDebugToken, (request, response) => {
     supabaseServiceRoleKeyPresent: Boolean(config.supabaseServiceRoleKey),
     geminiApiKeyPresent: Boolean(config.geminiApiKey),
     geminiModel: config.geminiModel,
+  });
+});
+
+app.get("/debug/events", requireDebugToken, (request, response) => {
+  response.json({
+    ok: true,
+    events: recentEvents,
   });
 });
 
@@ -151,10 +168,35 @@ function verifyWhatsappWebhook(request, response) {
 
 async function receiveWhatsappWebhook(request, response) {
   try {
+    const messages = [];
+    for (const entry of request.body?.entry || []) {
+      for (const change of entry.changes || []) {
+        for (const message of change.value?.messages || []) {
+          messages.push({
+            from: message.from,
+            type: message.type,
+            text: message.text?.body || "",
+          });
+        }
+      }
+    }
+    recordEvent("webhook_received", {
+      path: request.path,
+      messageCount: messages.length,
+      messages,
+    });
     const results = await handleWhatsappPayload(config, request.body);
+    recordEvent("webhook_processed", {
+      path: request.path,
+      results,
+    });
     response.status(200).json({ ok: true, results });
   } catch (error) {
     console.error(error);
+    recordEvent("webhook_failed", {
+      path: request.path,
+      error: error.message.slice(0, 500),
+    });
     response.status(500).json({ ok: false, error: "webhook_processing_failed" });
   }
 }
