@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "node server.mjs",
     "backend": "node backend/server.mjs",
+    "images:generate": "node scripts/generate-product-images.mjs",
+    "images:update-db": "node scripts/update-product-image-urls.mjs",
     "seed:samples": "node scripts/seed-sample-products.mjs",
     "start": "node backend/server.mjs",
     "build": "node --check server.mjs && node --check backend/server.mjs && node --test tests/*.test.mjs",
