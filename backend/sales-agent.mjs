@@ -1,4 +1,4 @@
-import { generateSalesCaptions, fallbackCaption } from "./gemini.mjs";
+import { generateFallbackChatReply, generateSalesCaptions, fallbackCaption } from "./gemini.mjs";
 import { detectInterest, findShopByMessage, rankProducts } from "./matching.mjs";
 import { createLead, listProductsForShop, listShops, logWhatsappMessage } from "./supabase.mjs";
 import { sendImage, sendText } from "./whatsapp.mjs";
@@ -32,21 +32,30 @@ function ownerAlert(shop, customerWhatsapp, customerMessage, products) {
   ].join("\n");
 }
 
+async function sendFallbackChat(config, message, reason) {
+  let reply;
+  try {
+    reply = await generateFallbackChatReply(config, message.text);
+  } catch (error) {
+    console.error(`Gemini fallback chat failed: ${error.message}`);
+    reply = "Haan bhai, ThreadIQ AI live hai. Catalog connection fix hote hi main real products aur images bhi bhej dunga. Aap apna style, budget ya size batao.";
+  }
+
+  await sendText(config, message.from, reply);
+  return { status: "fallback_chat", reason };
+}
+
 export async function handleCustomerMessage(config, message) {
   let shops;
   try {
     shops = await listShops(config);
   } catch (error) {
     console.error(`Supabase shops lookup failed: ${error.message}`);
-    const reply = "Bhai abhi shop catalog connect nahi ho paa raha. Thodi der me try karo, ya shop ka naam/requirement bhej do, owner ko check karwa denge.";
-    await sendText(config, message.from, reply);
-    return { status: "catalog_unavailable" };
+    return sendFallbackChat(config, message, "catalog_unavailable");
   }
 
   if (!shops.length) {
-    const reply = "Bhai abhi catalog me shops add nahi hui hain. Shop owner ko products upload karne honge, tab main images aur options bhej paunga.";
-    await sendText(config, message.from, reply);
-    return { status: "no_shops" };
+    return sendFallbackChat(config, message, "no_shops");
   }
 
   const shop = findShopByMessage(shops, message.text);
@@ -60,7 +69,7 @@ export async function handleCustomerMessage(config, message) {
   });
 
   if (!shop) {
-    const reply = "Bhai kis shop ke products dekhne hain? Example: “Raj Fashion ke black shirts dikhao”.";
+    const reply = await generateFallbackChatReply(config, `${message.text}\nAlso ask which shop they want, example Raj Fashion.`);
     await sendText(config, message.from, reply);
     await logWhatsappMessage(config, {
       customerWhatsapp: message.from,
@@ -76,15 +85,13 @@ export async function handleCustomerMessage(config, message) {
     products = await listProductsForShop(config, shop.id);
   } catch (error) {
     console.error(`Supabase products lookup failed: ${error.message}`);
-    const reply = `${shop.name} ka catalog abhi load nahi ho paa raha. Aap requirement bhej do, main owner ko connect karwa deta hoon.`;
-    await sendText(config, message.from, reply);
-    return { status: "products_unavailable", shopId: shop.id };
+    return sendFallbackChat(config, message, "products_unavailable");
   }
 
   const matchedProducts = rankProducts(products, message.text, 3);
 
   if (!matchedProducts.length) {
-    const reply = `${shop.name} me abhi matching in-stock products nahi mile. Aap category, color ya budget thoda aur bata do?`;
+    const reply = await generateFallbackChatReply(config, `${message.text}\nNo matching in-stock products found for ${shop.name}. Ask a helpful follow-up.`);
     await sendText(config, message.from, reply);
     await logWhatsappMessage(config, {
       customerWhatsapp: message.from,

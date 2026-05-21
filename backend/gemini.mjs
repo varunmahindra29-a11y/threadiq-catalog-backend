@@ -63,3 +63,39 @@ export async function generateSalesCaptions(config, { shop, products, customerMe
     };
   });
 }
+
+export async function generateFallbackChatReply(config, customerMessage) {
+  const prompt = [
+    "You are ThreadIQ, a friendly Hinglish AI fashion salesman on WhatsApp.",
+    "Reply naturally to the customer even if the shop catalog is not connected yet.",
+    "Keep the reply short, useful, and conversational.",
+    "If they ask for products, say catalog connection is being fixed and ask for their style, budget, size, or occasion.",
+    "Do not claim you found real products unless product data is provided.",
+    `Customer message: ${customerMessage}`,
+  ].join("\n");
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.geminiModel)}:generateContent?key=${encodeURIComponent(config.geminiApiKey)}`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.75,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gemini fallback chat failed ${response.status}: ${await response.text()}`);
+  }
+
+  const result = await response.json();
+  const text = result?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
+  return text || "Haan bhai, ThreadIQ AI live hai. Catalog connection fix hote hi main real products aur images bhi bhej dunga.";
+}
