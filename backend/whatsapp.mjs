@@ -1,25 +1,41 @@
+import { recordEvent } from "./debug-events.mjs";
+
 function whatsappEndpoint(config) {
   return `https://graph.facebook.com/v19.0/${config.whatsappPhoneNumberId}/messages`;
 }
 
 async function sendWhatsapp(config, payload) {
+  const fullPayload = {
+    messaging_product: "whatsapp",
+    ...payload,
+  };
   const response = await fetch(whatsappEndpoint(config), {
     method: "POST",
     headers: {
       Authorization: `Bearer ${config.whatsappAccessToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      ...payload,
-    }),
+    body: JSON.stringify(fullPayload),
   });
 
   if (!response.ok) {
-    throw new Error(`WhatsApp send failed ${response.status}: ${await response.text()}`);
+    const detail = await response.text();
+    recordEvent("whatsapp_send_failed", {
+      to: fullPayload.to,
+      type: fullPayload.type,
+      status: response.status,
+      detail: detail.slice(0, 500),
+    });
+    throw new Error(`WhatsApp send failed ${response.status}: ${detail}`);
   }
 
-  return response.json();
+  const result = await response.json();
+  recordEvent("whatsapp_send_ok", {
+    to: fullPayload.to,
+    type: fullPayload.type,
+    messageId: result?.messages?.[0]?.id,
+  });
+  return result;
 }
 
 export function normalizeWhatsappNumber(value) {

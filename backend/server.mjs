@@ -1,6 +1,7 @@
 import express from "express";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { getRecentEvents, recordEvent } from "./debug-events.mjs";
 import { readConfig } from "./env.mjs";
 import { handleWhatsappPayload } from "./sales-agent.mjs";
 import { listShops } from "./supabase.mjs";
@@ -16,19 +17,9 @@ try {
 
 const app = express();
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const recentEvents = [];
 
 app.use(express.json({ limit: "2mb" }));
 app.use(express.static(root));
-
-function recordEvent(type, data = {}) {
-  recentEvents.unshift({
-    type,
-    at: new Date().toISOString(),
-    ...data,
-  });
-  recentEvents.splice(50);
-}
 
 function requireDebugToken(request, response, next) {
   const token = request.get("x-debug-token");
@@ -89,7 +80,7 @@ app.get("/debug/config", requireDebugToken, (request, response) => {
 app.get("/debug/events", requireDebugToken, (request, response) => {
   response.json({
     ok: true,
-    events: recentEvents,
+    events: getRecentEvents(),
   });
 });
 
@@ -169,6 +160,7 @@ function verifyWhatsappWebhook(request, response) {
 async function receiveWhatsappWebhook(request, response) {
   try {
     const messages = [];
+    const statuses = [];
     for (const entry of request.body?.entry || []) {
       for (const change of entry.changes || []) {
         for (const message of change.value?.messages || []) {
@@ -178,12 +170,26 @@ async function receiveWhatsappWebhook(request, response) {
             text: message.text?.body || "",
           });
         }
+        for (const status of change.value?.statuses || []) {
+          statuses.push({
+            id: status.id,
+            status: status.status,
+            recipientId: status.recipient_id,
+            errors: status.errors?.map((error) => ({
+              code: error.code,
+              title: error.title,
+              message: error.message,
+            })),
+          });
+        }
       }
     }
     recordEvent("webhook_received", {
       path: request.path,
       messageCount: messages.length,
       messages,
+      statusCount: statuses.length,
+      statuses,
     });
     const results = await handleWhatsappPayload(config, request.body);
     recordEvent("webhook_processed", {
