@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { readConfig } from "./env.mjs";
 import { handleWhatsappPayload } from "./sales-agent.mjs";
 import { listShops } from "./supabase.mjs";
+import { sendText } from "./whatsapp.mjs";
 
 let config;
 try {
@@ -18,6 +19,15 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 app.use(express.json({ limit: "2mb" }));
 app.use(express.static(root));
+
+function requireDebugToken(request, response, next) {
+  const token = request.get("x-debug-token");
+  if (token !== config.whatsappVerifyToken) {
+    response.status(401).json({ ok: false, error: "invalid_debug_token" });
+    return;
+  }
+  next();
+}
 
 app.get("/health", (request, response) => {
   response.json({
@@ -47,7 +57,81 @@ app.get("/health/deep", async (request, response) => {
       supabase: {
         ok: false,
         error: "supabase_connection_failed",
+        detail: error.message.slice(0, 240),
       },
+    });
+  }
+});
+
+app.get("/debug/config", requireDebugToken, (request, response) => {
+  response.json({
+    ok: true,
+    whatsappPhoneNumberIdPresent: Boolean(config.whatsappPhoneNumberId),
+    whatsappAccessTokenPresent: Boolean(config.whatsappAccessToken),
+    whatsappVerifyTokenPresent: Boolean(config.whatsappVerifyToken),
+    supabaseUrlPresent: Boolean(config.supabaseUrl),
+    supabaseServiceRoleKeyPresent: Boolean(config.supabaseServiceRoleKey),
+    geminiApiKeyPresent: Boolean(config.geminiApiKey),
+    geminiModel: config.geminiModel,
+  });
+});
+
+app.post("/debug/whatsapp/send-test", requireDebugToken, async (request, response) => {
+  const to = request.body?.to;
+  const message = request.body?.message || "ThreadIQ WhatsApp test message.";
+  if (!to) {
+    response.status(400).json({ ok: false, error: "missing_to" });
+    return;
+  }
+
+  try {
+    const result = await sendText(config, to, message);
+    response.json({ ok: true, result });
+  } catch (error) {
+    response.status(500).json({
+      ok: false,
+      error: "whatsapp_send_failed",
+      detail: error.message.slice(0, 500),
+    });
+  }
+});
+
+app.post("/debug/webhook/simulate", requireDebugToken, async (request, response) => {
+  const from = request.body?.from;
+  const text = request.body?.text || "Raj Fashion ke products dikhao";
+  if (!from) {
+    response.status(400).json({ ok: false, error: "missing_from" });
+    return;
+  }
+
+  const payload = {
+    entry: [
+      {
+        changes: [
+          {
+            value: {
+              messages: [
+                {
+                  from,
+                  type: "text",
+                  text: { body: text },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ],
+  };
+
+  try {
+    const results = await handleWhatsappPayload(config, payload);
+    response.json({ ok: true, results });
+  } catch (error) {
+    response.status(500).json({
+      ok: false,
+      error: "webhook_simulation_failed",
+      detail: error.message.slice(0, 500),
     });
   }
 });
