@@ -26,7 +26,7 @@ app.get("/health", (request, response) => {
   });
 });
 
-app.get("/webhooks/whatsapp", (request, response) => {
+function verifyWhatsappWebhook(request, response) {
   const mode = request.query["hub.mode"];
   const token = request.query["hub.verify_token"];
   const challenge = request.query["hub.challenge"];
@@ -37,9 +37,9 @@ app.get("/webhooks/whatsapp", (request, response) => {
   }
 
   response.sendStatus(403);
-});
+}
 
-app.post("/webhooks/whatsapp", async (request, response) => {
+async function receiveWhatsappWebhook(request, response) {
   try {
     const results = await handleWhatsappPayload(config, request.body);
     response.status(200).json({ ok: true, results });
@@ -47,7 +47,12 @@ app.post("/webhooks/whatsapp", async (request, response) => {
     console.error(error);
     response.status(500).json({ ok: false, error: "webhook_processing_failed" });
   }
-});
+}
+
+app.get("/webhooks/whatsapp", verifyWhatsappWebhook);
+app.post("/webhooks/whatsapp", receiveWhatsappWebhook);
+app.get("/webhook", verifyWhatsappWebhook);
+app.post("/webhook", receiveWhatsappWebhook);
 
 app.get("*", (request, response) => {
   response.sendFile(join(root, "index.html"));
