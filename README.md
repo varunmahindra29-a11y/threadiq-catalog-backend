@@ -131,3 +131,12 @@ https://your-railway-domain.up.railway.app/webhooks/whatsapp
 ```
 
 Use the same `WHATSAPP_VERIFY_TOKEN` value in Meta's webhook verification field. Subscribe to the WhatsApp `messages` webhook field.
+
+Troubleshooting URLs:
+
+```text
+https://your-railway-domain.up.railway.app/health
+https://your-railway-domain.up.railway.app/health/deep
+```
+
+`/health/deep` confirms Supabase access without exposing secrets. If it returns `supabase_connection_failed`, check `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in Railway.

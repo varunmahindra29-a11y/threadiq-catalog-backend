@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readConfig } from "./env.mjs";
 import { handleWhatsappPayload } from "./sales-agent.mjs";
+import { listShops } from "./supabase.mjs";
 
 let config;
 try {
@@ -24,6 +25,31 @@ app.get("/health", (request, response) => {
     provider: "gemini",
     model: config.geminiModel,
   });
+});
+
+app.get("/health/deep", async (request, response) => {
+  try {
+    const shops = await listShops(config);
+    response.json({
+      ok: true,
+      provider: "gemini",
+      model: config.geminiModel,
+      supabase: {
+        ok: true,
+        shops: shops.length,
+      },
+    });
+  } catch (error) {
+    response.status(500).json({
+      ok: false,
+      provider: "gemini",
+      model: config.geminiModel,
+      supabase: {
+        ok: false,
+        error: "supabase_connection_failed",
+      },
+    });
+  }
 });
 
 function verifyWhatsappWebhook(request, response) {
