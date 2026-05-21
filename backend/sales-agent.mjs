@@ -32,6 +32,12 @@ function ownerAlert(shop, customerWhatsapp, customerMessage, products) {
   ].join("\n");
 }
 
+function wantsCatalog(messageText) {
+  return /\b(raj fashion|product|products|dikhao|show|kurta|shirt|tshirt|t-shirt|jeans|jacket|trouser|pant|sneaker|shoe|under|budget|size|xl|large|medium)\b/i.test(
+    messageText,
+  );
+}
+
 async function sendFallbackChat(config, message, reason) {
   let reply;
   try {
@@ -46,7 +52,9 @@ async function sendFallbackChat(config, message, reason) {
 }
 
 export async function handleCustomerMessage(config, message) {
-  return sendFallbackChat(config, message, "ai_chat_mode");
+  if (!wantsCatalog(message.text)) {
+    return sendFallbackChat(config, message, "ai_chat_mode");
+  }
 
   let shops;
   try {
