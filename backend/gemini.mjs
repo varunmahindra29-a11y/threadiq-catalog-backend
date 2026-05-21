@@ -10,6 +10,35 @@ function compactProduct(product) {
   };
 }
 
+function modelFallbacks(config) {
+  return [...new Set([config.geminiModel, "gemini-2.5-flash-lite", "gemini-2.5-flash"].filter(Boolean))];
+}
+
+async function generateContent(config, body) {
+  const errors = [];
+  for (const model of modelFallbacks(config)) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(config.geminiApiKey)}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      return {
+        model,
+        text: result?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim() || "",
+      };
+    }
+
+    const detail = await response.text();
+    errors.push(`${model}: ${response.status} ${detail.slice(0, 180)}`);
+  }
+
+  throw new Error(`Gemini request failed for all models: ${errors.join(" | ")}`);
+}
+
 export function fallbackCaption(shop, product) {
   const sizes = Array.isArray(product.sizes) && product.sizes.length ? product.sizes.join(", ") : "size confirm kar denge";
   const colors = Array.isArray(product.colors) && product.colors.length ? product.colors.join(", ") : "available color";
@@ -28,30 +57,18 @@ export async function generateSalesCaptions(config, { shop, products, customerMe
     `Products: ${JSON.stringify(products.map(compactProduct))}`,
   ].join("\n");
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.geminiModel)}:generateContent?key=${encodeURIComponent(config.geminiApiKey)}`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: prompt }],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.45,
-        responseMimeType: "application/json",
+  const { text } = await generateContent(config, {
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: prompt }],
       },
-    }),
+    ],
+    generationConfig: {
+      temperature: 0.45,
+      responseMimeType: "application/json",
+    },
   });
-
-  if (!response.ok) {
-    throw new Error(`Gemini request failed ${response.status}: ${await response.text()}`);
-  }
-
-  const result = await response.json();
-  const text = result?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "";
   const parsed = JSON.parse(text);
   const captions = Array.isArray(parsed.captions) ? parsed.captions : [];
 
@@ -74,28 +91,16 @@ export async function generateFallbackChatReply(config, customerMessage) {
     `Customer message: ${customerMessage}`,
   ].join("\n");
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.geminiModel)}:generateContent?key=${encodeURIComponent(config.geminiApiKey)}`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: prompt }],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.75,
+  const { text, model } = await generateContent(config, {
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: prompt }],
       },
-    }),
+    ],
+    generationConfig: {
+      temperature: 0.75,
+    },
   });
-
-  if (!response.ok) {
-    throw new Error(`Gemini fallback chat failed ${response.status}: ${await response.text()}`);
-  }
-
-  const result = await response.json();
-  const text = result?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("").trim();
-  return text || "Haan bhai, ThreadIQ AI live hai. Catalog connection fix hote hi main real products aur images bhi bhej dunga.";
+  return text ? `${text}\n\n(${model})` : "Haan bhai, ThreadIQ AI live hai. Catalog connection fix hote hi main real products aur images bhi bhej dunga.";
 }
