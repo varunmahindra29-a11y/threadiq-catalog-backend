@@ -38,7 +38,7 @@ async function sendFallbackChat(config, message, reason) {
     reply = await generateFallbackChatReply(config, message.text);
   } catch (error) {
     console.error(`Gemini fallback chat failed: ${error.message}`);
-    reply = "Haan bhai, ThreadIQ AI live hai. Catalog connection fix hote hi main real products aur images bhi bhej dunga. Aap apna style, budget ya size batao.";
+    reply = `Samjha bhai: "${message.text}". Main AI chat mode me hoon. Catalog connection fix hote hi products/images bhi bhej dunga, abhi aap style, budget, size ya occasion batao.`;
   }
 
   await sendText(config, message.from, reply);
@@ -46,11 +46,7 @@ async function sendFallbackChat(config, message, reason) {
 }
 
 export async function handleCustomerMessage(config, message) {
-  await sendText(
-    config,
-    message.from,
-    "Haan bhai, ThreadIQ AI live hai. Main tumhara message samajh raha hoon, catalog connect hote hi products/images bhi bhej dunga.",
-  );
+  return sendFallbackChat(config, message, "ai_chat_mode");
 
   let shops;
   try {
