@@ -400,15 +400,17 @@ function renderCategoryBars() {
       .reduce((sum, product) => sum + product.inquiries, 0),
   }));
   const max = Math.max(...totals.map((item) => item.value), 1);
+  const total = Math.max(totals.reduce((sum, item) => sum + item.value, 0), 1);
   $("#categoryBars").innerHTML = totals
     .sort((a, b) => b.value - a.value)
-    .slice(0, 6)
+    .slice(0, 5)
     .map(
-      (item) => `
+      (item, index) => `
       <div class="bar-row">
         <header>
+          <span>${index + 1}</span>
           <strong>${escapeHtml(item.category)}</strong>
-          <span>${item.value}</span>
+          <em>${item.value} (${Math.round((item.value / total) * 100)}%)</em>
         </header>
         <div class="bar-track"><div class="bar-fill" style="width: ${(item.value / max) * 100}%"></div></div>
       </div>
@@ -420,23 +422,51 @@ function renderCategoryBars() {
 function renderHealth() {
   const sorted = [...state.products]
     .sort((a, b) => a.stock - b.stock || b.inquiries - a.inquiries)
-    .slice(0, 5);
-  $("#healthList").innerHTML = sorted
-    .map((product) => {
-      const needsRestock = product.stock <= 5;
-      return `
-      <div class="health-item">
-        <div>
-          <strong>${escapeHtml(product.name)}</strong>
-          <span>${escapeHtml(product.category)} · ${product.stock} stock · ${product.orders} orders</span>
-        </div>
-        <span class="status-chip ${needsRestock ? "warning" : ""}">
-          ${needsRestock ? "Restock" : "Healthy"}
-        </span>
+    .slice(0, 4);
+  $("#healthList").innerHTML = `
+    <div class="health-table" role="table" aria-label="Listing health">
+      <div class="health-row head" role="row">
+        <span>Product</span>
+        <span>Issue</span>
+        <span>Priority</span>
+        <span>Suggested Action</span>
+        <span>Status</span>
+        <span>Action</span>
       </div>
-    `;
-    })
-    .join("");
+      ${sorted.map(renderHealthRow).join("")}
+    </div>
+  `;
+}
+
+function renderHealthRow(product) {
+  const needsRestock = product.stock <= 5;
+  const missingImage = !product.image_url;
+  const issue = missingImage ? "Missing product image" : needsRestock ? "Low stock risk" : product.sizes.length ? "Boost WhatsApp demand" : "Missing size options";
+  const priority = missingImage || needsRestock ? "High" : product.sizes.length ? "Low" : "Medium";
+  const status = missingImage || needsRestock ? "Needs Attention" : product.sizes.length ? "Pending" : "In Progress";
+  const action = missingImage
+    ? "Add clear front and back photos"
+    : needsRestock
+      ? "Restock or pause recommendations"
+      : product.sizes.length
+        ? "Promote in WhatsApp replies"
+        : "Add all available sizes";
+  return `
+    <div class="health-row" role="row">
+      <span class="health-product">
+        <img src="${escapeHtml(product.image_url || "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=900&q=80")}" alt="${escapeHtml(product.name)}" />
+        <span>
+          <strong>${escapeHtml(product.name)}</strong>
+          <small>ID: PRD-${escapeHtml(String(product.id).slice(0, 6).toUpperCase())}</small>
+        </span>
+      </span>
+      <span>${escapeHtml(issue)}</span>
+      <span><mark class="priority ${priority.toLowerCase()}">${escapeHtml(priority)}</mark></span>
+      <span>${escapeHtml(action)}</span>
+      <span><mark class="status-badge ${status.toLowerCase().replace(/\s+/g, "-")}">${escapeHtml(status)}</mark></span>
+      <span><button class="table-action" data-open-listing type="button">Fix Listing</button></span>
+    </div>
+  `;
 }
 
 function renderHotLeads() {
@@ -911,6 +941,11 @@ function bindEvents() {
   });
   $$("[data-open-listing]").forEach((button) => {
     button.addEventListener("click", () => $("#productDialog").showModal());
+  });
+  $("#healthList").addEventListener("click", (event) => {
+    if (event.target.closest("[data-open-listing]")) {
+      $("#productDialog").showModal();
+    }
   });
   $("#productForm").addEventListener("submit", handleProductSubmit);
   $("#productDialog").addEventListener("close", () => {

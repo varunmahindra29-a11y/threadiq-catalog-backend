@@ -20,15 +20,19 @@
 
         <nav class="nav-stack">
           <button class="nav-item active" data-panel="dashboard" type="button">
+            <span class="nav-icon">⌂</span>
             <span>Dashboard</span>
           </button>
           <button class="nav-item" data-panel="inventory" type="button">
+            <span class="nav-icon">▣</span>
             <span>Listings</span>
           </button>
           <button class="nav-item" data-panel="leads" type="button">
+            <span class="nav-icon">◌</span>
             <span>Leads</span>
           </button>
           <button class="nav-item" data-panel="assistant" type="button">
+            <span class="nav-icon">✦</span>
             <span>AI Matches</span>
           </button>
         </nav>
@@ -37,42 +41,69 @@
           <span class="muted-label">Today</span>
           <strong id="todayLeads">0 leads</strong>
           <p>WhatsApp shoppers asking for style, budget, and size-based suggestions.</p>
+          <button class="sidebar-card-action" data-panel-shortcut="leads" type="button">View all leads →</button>
+        </div>
+
+        <div class="sidebar-user">
+          <span>VK</span>
+          <div>
+            <strong>Varun Kumar</strong>
+            <small>Shop Owner</small>
+          </div>
         </div>
       </aside>
 
       <main class="workspace">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Shop owner command center</p>
-            <h1>Clothing analytics and product listings</h1>
+            <p class="eyebrow">Welcome back, Varun</p>
+            <h1>Command Center</h1>
+            <p class="topbar-copy">Track product demand, WhatsApp leads, and listing performance.</p>
           </div>
           <div class="topbar-actions">
-            <button class="icon-button" id="syncButton" type="button" aria-label="Sync Supabase" title="Sync Supabase">↻</button>
-            <button class="primary-button" data-open-listing type="button">Add product</button>
+            <span class="sync-pill"><span></span>Live WhatsApp Sync</span>
+            <button class="ghost-button refresh-button" id="syncButton" type="button" aria-label="Refresh dashboard" title="Refresh dashboard">↻ Refresh</button>
+            <button class="primary-button add-button" data-open-listing type="button">+ Add Product</button>
           </div>
         </header>
 
         <section class="panel active" id="dashboardPanel">
           <div class="stats-grid">
-            <article class="metric-card">
-              <span class="muted-label">Revenue tracked</span>
-              <strong id="metricRevenue">₹0</strong>
-              <small>From WhatsApp-assisted product inquiries</small>
+            <article class="metric-card revenue">
+              <div class="metric-icon">₹</div>
+              <div>
+                <span class="muted-label">Revenue Tracked</span>
+                <strong id="metricRevenue">₹0</strong>
+                <small><b>↑ 12%</b> vs last 7 days</small>
+              </div>
+              <svg class="sparkline" viewBox="0 0 120 40" aria-hidden="true"><path d="M2 32 L18 32 L32 24 L46 28 L62 18 L78 22 L96 8 L112 16" /></svg>
             </article>
-            <article class="metric-card">
-              <span class="muted-label">Active products</span>
-              <strong id="metricProducts">0</strong>
-              <small>Live inventory available for AI matching</small>
+            <article class="metric-card products">
+              <div class="metric-icon">▣</div>
+              <div>
+                <span class="muted-label">Active Products</span>
+                <strong id="metricProducts">0</strong>
+                <small><b>↑ 8%</b> vs last 7 days</small>
+              </div>
+              <svg class="sparkline blue" viewBox="0 0 120 40" aria-hidden="true"><path d="M2 34 L18 34 L34 24 L50 30 L66 20 L82 26 L100 12 L116 8" /></svg>
             </article>
-            <article class="metric-card">
-              <span class="muted-label">Conversion rate</span>
-              <strong id="metricConversion">0%</strong>
-              <small>Lead to confirmed order estimate</small>
+            <article class="metric-card conversion">
+              <div class="metric-icon">↗</div>
+              <div>
+                <span class="muted-label">Conversion Rate</span>
+                <strong id="metricConversion">0%</strong>
+                <small><b>↑ 5%</b> vs last 7 days</small>
+              </div>
+              <svg class="sparkline" viewBox="0 0 120 40" aria-hidden="true"><path d="M2 33 L18 26 L34 30 L52 20 L68 25 L84 14 L100 19 L116 10" /></svg>
             </article>
-            <article class="metric-card">
-              <span class="muted-label">Low stock</span>
-              <strong id="metricLowStock">0</strong>
-              <small>Items needing quick restock</small>
+            <article class="metric-card stock">
+              <div class="metric-icon">□</div>
+              <div>
+                <span class="muted-label">Low Stock</span>
+                <strong id="metricLowStock">0</strong>
+                <small><b class="down">↓ 2</b> vs last 7 days</small>
+              </div>
+              <svg class="sparkline orange" viewBox="0 0 120 40" aria-hidden="true"><path d="M2 34 L18 24 L34 30 L50 25 L66 20 L82 26 L100 12 L116 18" /></svg>
             </article>
           </div>
 
@@ -80,8 +111,8 @@
             <section class="chart-panel">
               <div class="section-heading">
                 <div>
-                  <span class="muted-label">Demand trend</span>
-                  <h2>WhatsApp inquiries</h2>
+                  <h2>WhatsApp Inquiries</h2>
+                  <span class="muted-label">Demand trend over time</span>
                 </div>
                 <select id="rangeFilter" aria-label="Date range">
                   <option value="7">7 days</option>
@@ -89,26 +120,29 @@
                   <option value="30">30 days</option>
                 </select>
               </div>
+              <p class="chart-note">↗ Demand is up <strong>18%</strong> this week</p>
               <canvas id="leadsChart" width="860" height="320" aria-label="Lead analytics chart"></canvas>
             </section>
 
             <section class="focus-panel">
               <div class="section-heading">
                 <div>
-                  <span class="muted-label">Top categories</span>
-                  <h2>What customers ask for</h2>
+                  <h2>Customer Demand</h2>
+                  <span class="muted-label">Top categories customers ask for</span>
                 </div>
               </div>
               <div id="categoryBars" class="bar-list"></div>
+              <button class="ghost-button view-categories" data-panel-shortcut="inventory" type="button">View all categories →</button>
             </section>
           </div>
 
           <section class="table-panel">
             <div class="section-heading">
               <div>
-                <span class="muted-label">Action queue</span>
-                <h2>Listing health</h2>
+                <h2>Listing Health</h2>
+                <span class="muted-label">Action queue to improve your listings</span>
               </div>
+              <button class="ghost-button" data-panel-shortcut="inventory" type="button">View all issues →</button>
             </div>
             <div id="healthList" class="health-list"></div>
           </section>
