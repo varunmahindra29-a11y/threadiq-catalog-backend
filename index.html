@@ -160,18 +160,28 @@
         </section>
 
         <section class="panel" id="inventoryPanel">
-          <div class="inventory-toolbar">
-            <div class="search-box">
+          <div class="catalog-toolbar">
+            <div class="catalog-search">
               <span>⌕</span>
-              <input id="searchInput" type="search" placeholder="Search products, color, size, category" />
+              <input id="searchInput" type="search" placeholder="Search products, color, size, category..." />
             </div>
             <select id="categoryFilter" aria-label="Category filter">
               <option value="all">All categories</option>
             </select>
-            <button class="primary-button" data-open-listing type="button">Add product</button>
+            <button class="filter-button" id="stockFilterButton" type="button">▽ Low stock</button>
           </div>
 
           <div id="productGrid" class="product-grid"></div>
+
+          <div class="catalog-footer">
+            <span id="listingCount">Showing products</span>
+            <div class="catalog-pager" id="productPager"></div>
+            <select id="pageSizeSelect" aria-label="Products per page">
+              <option value="8">8 per page</option>
+              <option value="12">12 per page</option>
+              <option value="16">16 per page</option>
+            </select>
+          </div>
         </section>
 
         <section class="panel" id="leadsPanel">

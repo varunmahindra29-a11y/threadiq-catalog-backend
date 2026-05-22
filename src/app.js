@@ -119,6 +119,9 @@ const state = {
   leads: [],
   leadMessages: [],
   selectedLeadId: "",
+  inventoryPage: 1,
+  inventoryPageSize: 8,
+  lowStockOnly: false,
   defaultShopId: "",
   config: {
     url: SUPABASE_URL,
@@ -364,32 +367,62 @@ function renderProducts() {
     ]
       .join(" ")
       .toLowerCase();
-    return haystack.includes(query) && (category === "all" || product.category === category);
+    return (
+      haystack.includes(query) &&
+      (category === "all" || product.category === category) &&
+      (!state.lowStockOnly || product.stock <= 5)
+    );
   });
+  const pageCount = Math.max(Math.ceil(products.length / state.inventoryPageSize), 1);
+  state.inventoryPage = Math.min(state.inventoryPage, pageCount);
+  const start = (state.inventoryPage - 1) * state.inventoryPageSize;
+  const visibleProducts = products.slice(start, start + state.inventoryPageSize);
 
-  $("#productGrid").innerHTML = products.length
-    ? products.map(renderProductCard).join("")
+  $("#productGrid").innerHTML = visibleProducts.length
+    ? visibleProducts.map(renderProductCard).join("")
     : `<div class="empty-state">No products match this filter yet.</div>`;
+  $("#listingCount").textContent = products.length
+    ? `Showing ${start + 1}-${Math.min(start + state.inventoryPageSize, products.length)} of ${products.length} products`
+    : "No products found";
+  renderProductPager(pageCount);
 }
 
 function renderProductCard(product) {
   const image = product.image_url || "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=900&q=80";
-  const tags = [...product.sizes, ...product.colors].slice(0, 6);
+  const tags = [...product.sizes.slice(0, 1), ...product.colors.slice(0, 1)];
   return `
-    <article class="product-card">
-      <img src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}" loading="lazy" />
+    <article class="product-card catalog-card">
+      <div class="product-media">
+        <img src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}" loading="lazy" />
+        <button class="favorite-button" type="button" aria-label="Save ${escapeHtml(product.name)}">♡</button>
+      </div>
       <div class="product-content">
         <div class="product-title">
           <strong>${escapeHtml(product.name)}</strong>
           <span class="price">${currency.format(product.price)}</span>
         </div>
-        <small>${escapeHtml(product.category)} · ${product.stock} in stock · ${product.inquiries} inquiries</small>
+        <small>${product.stock} in stock · ${product.inquiries} inquiries</small>
         <div class="tag-list">
           ${tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
+          <span class="tag category-tag">${escapeHtml(product.category)}</span>
         </div>
       </div>
     </article>
   `;
+}
+
+function renderProductPager(pageCount) {
+  const buttons = [];
+  buttons.push(`<button type="button" data-page-step="-1" ${state.inventoryPage === 1 ? "disabled" : ""}>‹</button>`);
+  for (let page = 1; page <= pageCount; page += 1) {
+    if (pageCount > 6 && page > 3 && page < pageCount) {
+      if (page === 4) buttons.push(`<span>...</span>`);
+      continue;
+    }
+    buttons.push(`<button class="${page === state.inventoryPage ? "active" : ""}" type="button" data-page="${page}">${page}</button>`);
+  }
+  buttons.push(`<button type="button" data-page-step="1" ${state.inventoryPage === pageCount ? "disabled" : ""}>›</button>`);
+  $("#productPager").innerHTML = buttons.join("");
 }
 
 function renderCategoryBars() {
@@ -955,8 +988,39 @@ function bindEvents() {
   $("#productImageInput").addEventListener("change", (event) => {
     updateImagePreview(event.currentTarget.files?.[0]);
   });
-  $("#searchInput").addEventListener("input", renderProducts);
-  $("#categoryFilter").addEventListener("change", renderProducts);
+  $("#searchInput").addEventListener("input", () => {
+    state.inventoryPage = 1;
+    renderProducts();
+  });
+  $("#categoryFilter").addEventListener("change", () => {
+    state.inventoryPage = 1;
+    renderProducts();
+  });
+  $("#stockFilterButton").addEventListener("click", () => {
+    state.lowStockOnly = !state.lowStockOnly;
+    state.inventoryPage = 1;
+    $("#stockFilterButton").classList.toggle("active", state.lowStockOnly);
+    renderProducts();
+  });
+  $("#pageSizeSelect").addEventListener("change", (event) => {
+    state.inventoryPageSize = Number(event.currentTarget.value);
+    state.inventoryPage = 1;
+    renderProducts();
+  });
+  $("#productPager").addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+    const page = button.dataset.page ? Number(button.dataset.page) : state.inventoryPage + Number(button.dataset.pageStep || 0);
+    if (!Number.isFinite(page)) return;
+    state.inventoryPage = Math.max(1, page);
+    renderProducts();
+  });
+  $("#productGrid").addEventListener("click", (event) => {
+    const button = event.target.closest(".favorite-button");
+    if (!button) return;
+    button.classList.toggle("active");
+    button.textContent = button.classList.contains("active") ? "♥" : "♡";
+  });
   $("#leadSearchInput").addEventListener("input", renderLeadInbox);
   $("#leadStatusFilter").addEventListener("change", renderLeadInbox);
   $("#leadList").addEventListener("click", (event) => {
