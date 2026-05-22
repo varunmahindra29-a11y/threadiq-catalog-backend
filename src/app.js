@@ -87,8 +87,38 @@ const leadSeries = {
   30: [6, 8, 9, 10, 12, 13, 13, 15, 16, 16, 18, 20, 22, 21, 24, 25, 24, 27, 28, 30, 29, 32, 33, 31, 34, 36, 37, 39, 40, 42],
 };
 
+const demoLeads = [
+  {
+    id: "demo-lead-1",
+    customer_whatsapp: "919876543210",
+    customer_message: "black shirt under 2000 L size chahiye",
+    matched_product_names: ["Black Oversized Shirt"],
+    status: "new",
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "demo-lead-2",
+    customer_whatsapp: "918888777666",
+    customer_message: "party ke liye kurta dikhao",
+    matched_product_names: ["Rust Party Kurta"],
+    status: "follow_up",
+    created_at: new Date(Date.now() - 1000 * 60 * 52).toISOString(),
+  },
+  {
+    id: "demo-lead-3",
+    customer_whatsapp: "917777666555",
+    customer_message: "white sneakers available hai kya",
+    matched_product_names: ["White Minimal Sneakers"],
+    status: "new",
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+  },
+];
+
 const state = {
   products: [],
+  leads: [],
+  leadMessages: [],
+  selectedLeadId: "",
   defaultShopId: "",
   config: {
     url: SUPABASE_URL,
@@ -108,6 +138,7 @@ const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 function loadLocalState() {
   state.products = demoProducts;
+  state.leads = demoLeads.map(normalizeLead);
 }
 
 function hasSupabaseConfig() {
@@ -167,6 +198,22 @@ async function fetchDefaultShopId() {
   const rows = await response.json();
   state.defaultShopId = rows?.[0]?.id || "";
   return state.defaultShopId;
+}
+
+async function fetchLeads() {
+  try {
+    const response = await fetch("/api/leads");
+    if (!response.ok) throw new Error("Leads API failed");
+    const result = await response.json();
+    state.leads = Array.isArray(result.leads) ? result.leads.map(normalizeLead) : [];
+    state.leadMessages = Array.isArray(result.messages) ? result.messages.map(normalizeMessage) : [];
+    state.selectedLeadId = state.leads[0]?.id || "";
+  } catch {
+    if (!state.leads.length) {
+      state.leads = demoLeads.map(normalizeLead);
+      state.selectedLeadId = state.leads[0]?.id || "";
+    }
+  }
 }
 
 async function insertSupabaseProduct(product) {
@@ -237,6 +284,28 @@ function normalizeProduct(product) {
   };
 }
 
+function normalizeLead(lead) {
+  return {
+    id: lead.id || crypto.randomUUID(),
+    customer_whatsapp: lead.customer_whatsapp || "",
+    customer_message: lead.customer_message || "",
+    matched_product_ids: Array.isArray(lead.matched_product_ids) ? lead.matched_product_ids : splitList(lead.matched_product_ids),
+    matched_product_names: Array.isArray(lead.matched_product_names) ? lead.matched_product_names : splitList(lead.matched_product_names),
+    status: lead.status || "new",
+    created_at: lead.created_at || new Date().toISOString(),
+  };
+}
+
+function normalizeMessage(message) {
+  return {
+    id: message.id || crypto.randomUUID(),
+    customer_whatsapp: message.customer_whatsapp || "",
+    direction: message.direction || "inbound",
+    body: message.body || "",
+    created_at: message.created_at || new Date().toISOString(),
+  };
+}
+
 function splitList(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value;
@@ -253,6 +322,8 @@ function renderAll() {
   renderProducts();
   renderCategoryBars();
   renderHealth();
+  renderHotLeads();
+  renderLeadInbox();
   drawChart();
 }
 
@@ -267,7 +338,7 @@ function renderMetrics() {
   $("#metricProducts").textContent = state.products.length;
   $("#metricConversion").textContent = `${conversion}%`;
   $("#metricLowStock").textContent = lowStock;
-  $("#todayLeads").textContent = `${leadSeries[7].at(-1)} leads`;
+  $("#todayLeads").textContent = `${state.leads.length || leadSeries[7].at(-1)} leads`;
 }
 
 function renderCategoryFilter() {
@@ -368,6 +439,168 @@ function renderHealth() {
     .join("");
 }
 
+function renderHotLeads() {
+  const leads = [...state.leads]
+    .sort((a, b) => leadIntentScore(b) - leadIntentScore(a))
+    .slice(0, 3);
+  $("#hotLeadList").innerHTML = leads.length
+    ? leads
+        .map((lead) => {
+          const products = leadProducts(lead).slice(0, 2);
+          return `
+            <button class="hot-lead-card" data-lead-id="${escapeHtml(lead.id)}" type="button">
+              <span class="lead-avatar">${escapeHtml(customerInitial(lead.customer_whatsapp))}</span>
+              <span>
+                <strong>+${escapeHtml(maskPhone(lead.customer_whatsapp))}</strong>
+                <small>${escapeHtml(lead.customer_message)}</small>
+              </span>
+              <em>${products.length ? products.map((product) => escapeHtml(product.name)).join(", ") : "Needs review"}</em>
+            </button>
+          `;
+        })
+        .join("")
+    : `<div class="empty-state">WhatsApp leads will appear here after customers ask for products.</div>`;
+}
+
+function renderLeadInbox() {
+  renderLeadMetrics();
+  renderLeadList();
+  renderLeadDetail();
+}
+
+function renderLeadMetrics() {
+  const open = state.leads.filter((lead) => lead.status !== "closed").length;
+  const hot = state.leads.filter((lead) => leadIntentScore(lead) >= 70).length;
+  const today = state.leads.filter((lead) => new Date(lead.created_at).toDateString() === new Date().toDateString()).length;
+  $("#leadOpenCount").textContent = open;
+  $("#leadHotCount").textContent = hot;
+  $("#leadTodayCount").textContent = today;
+}
+
+function renderLeadList() {
+  const query = $("#leadSearchInput")?.value.trim().toLowerCase() || "";
+  const status = $("#leadStatusFilter")?.value || "all";
+  const leads = state.leads.filter((lead) => {
+    const products = leadProducts(lead).map((product) => product.name).join(" ");
+    const text = `${lead.customer_whatsapp} ${lead.customer_message} ${products} ${lead.status}`.toLowerCase();
+    return text.includes(query) && (status === "all" || lead.status === status);
+  });
+
+  if (!state.selectedLeadId || !leads.some((lead) => lead.id === state.selectedLeadId)) {
+    state.selectedLeadId = leads[0]?.id || state.leads[0]?.id || "";
+  }
+
+  $("#leadList").innerHTML = leads.length
+    ? leads
+        .map((lead) => {
+          const products = leadProducts(lead);
+          return `
+            <button class="lead-item ${lead.id === state.selectedLeadId ? "active" : ""}" data-lead-id="${escapeHtml(lead.id)}" type="button">
+              <span class="lead-avatar">${escapeHtml(customerInitial(lead.customer_whatsapp))}</span>
+              <span class="lead-item-body">
+                <span class="lead-line">
+                  <strong>+${escapeHtml(maskPhone(lead.customer_whatsapp))}</strong>
+                  <em>${formatTime(lead.created_at)}</em>
+                </span>
+                <small>${escapeHtml(lead.customer_message)}</small>
+                <span class="lead-tags">
+                  <span class="status-chip ${lead.status === "new" ? "" : "warning"}">${escapeHtml(statusLabel(lead.status))}</span>
+                  <span>${products.length || lead.matched_product_names.length} matches</span>
+                </span>
+              </span>
+            </button>
+          `;
+        })
+        .join("")
+    : `<div class="empty-state">No leads match this filter yet.</div>`;
+}
+
+function renderLeadDetail() {
+  const lead = state.leads.find((item) => item.id === state.selectedLeadId);
+  if (!lead) {
+    $("#leadDetail").innerHTML = `<div class="empty-state">Select a lead to see customer intent, matched products, and reply context.</div>`;
+    return;
+  }
+
+  const products = leadProducts(lead);
+  const messages = leadMessages(lead).slice(0, 5);
+  const replyText = encodeURIComponent(`Hi, ${products[0]?.name || "selected product"} ke liye aapka size confirm kar dijiye.`);
+  const whatsappUrl = `https://wa.me/${encodeURIComponent(lead.customer_whatsapp)}?text=${replyText}`;
+
+  $("#leadDetail").innerHTML = `
+    <div class="lead-detail-head">
+      <div>
+        <span class="muted-label">Customer</span>
+        <h2>+${escapeHtml(maskPhone(lead.customer_whatsapp))}</h2>
+        <p>${escapeHtml(lead.customer_message)}</p>
+      </div>
+      <a class="primary-button link-button" href="${whatsappUrl}" target="_blank" rel="noreferrer">Reply</a>
+    </div>
+
+    <div class="intent-meter" aria-label="Lead intent score">
+      <span style="width: ${leadIntentScore(lead)}%"></span>
+    </div>
+
+    <div class="lead-insight-grid">
+      <div>
+        <span class="muted-label">Intent</span>
+        <strong>${leadIntentScore(lead)} / 100</strong>
+      </div>
+      <div>
+        <span class="muted-label">Status</span>
+        <strong>${escapeHtml(statusLabel(lead.status))}</strong>
+      </div>
+      <div>
+        <span class="muted-label">Received</span>
+        <strong>${formatTime(lead.created_at)}</strong>
+      </div>
+    </div>
+
+    <section class="detail-block">
+      <span class="muted-label">AI matched products</span>
+      <div class="lead-product-list">
+        ${renderLeadProducts(products, lead)}
+      </div>
+    </section>
+
+    <section class="detail-block">
+      <span class="muted-label">Conversation trail</span>
+      <div class="lead-timeline">
+        ${messages.length ? messages.map(renderLeadMessage).join("") : `<p>No message history logged yet.</p>`}
+      </div>
+    </section>
+  `;
+}
+
+function renderLeadProducts(products, lead) {
+  if (!products.length && lead.matched_product_names.length) {
+    return lead.matched_product_names.map((name) => `<div class="lead-product-fallback">${escapeHtml(name)}</div>`).join("");
+  }
+  if (!products.length) return `<div class="lead-product-fallback">No matched product stored yet.</div>`;
+  return products
+    .map(
+      (product) => `
+        <article class="lead-product">
+          <img src="${escapeHtml(product.image_url || "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=900&q=80")}" alt="${escapeHtml(product.name)}" />
+          <div>
+            <strong>${escapeHtml(product.name)}</strong>
+            <small>${escapeHtml(product.category)} · ${currency.format(product.price)} · ${product.stock} stock</small>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderLeadMessage(message) {
+  return `
+    <div class="timeline-row ${message.direction}">
+      <strong>${message.direction === "inbound" ? "Customer" : "AI"}</strong>
+      <span>${escapeHtml(message.body)}</span>
+    </div>
+  `;
+}
+
 function drawChart() {
   const canvas = $("#leadsChart");
   const ctx = canvas.getContext("2d");
@@ -442,6 +675,7 @@ function switchPanel(panel) {
     button.classList.toggle("active", button.dataset.panel === panel);
   });
   if (panel === "dashboard") drawChart();
+  if (panel === "leads") renderLeadInbox();
 }
 
 function uniqueCategories() {
@@ -455,6 +689,55 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function leadProducts(lead) {
+  const ids = new Set(lead.matched_product_ids);
+  const names = new Set(lead.matched_product_names.map((name) => name.toLowerCase()));
+  return state.products.filter((product) => ids.has(product.id) || names.has(product.name.toLowerCase()));
+}
+
+function leadMessages(lead) {
+  return state.leadMessages
+    .filter((message) => message.customer_whatsapp === lead.customer_whatsapp)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+}
+
+function leadIntentScore(lead) {
+  const text = `${lead.customer_message} ${lead.status}`.toLowerCase();
+  let score = 42;
+  if (/(buy|order|book|chahiye|chaiye|available|confirm|price|rate|cost)/i.test(text)) score += 28;
+  if (leadProducts(lead).length || lead.matched_product_names.length) score += 18;
+  if (lead.status === "new") score += 8;
+  if (lead.status === "closed") score -= 30;
+  return Math.max(0, Math.min(score, 100));
+}
+
+function customerInitial(phone) {
+  return String(phone || "C").replace(/\D/g, "").slice(-1) || "C";
+}
+
+function maskPhone(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (digits.length <= 4) return digits || "customer";
+  return `${digits.slice(0, 2)}••••${digits.slice(-4)}`;
+}
+
+function statusLabel(status) {
+  return String(status || "new")
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Just now";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function readFileAsDataUrl(file) {
@@ -623,6 +906,9 @@ function bindEvents() {
   $$(".nav-item").forEach((button) => {
     button.addEventListener("click", () => switchPanel(button.dataset.panel));
   });
+  $$("[data-panel-shortcut]").forEach((button) => {
+    button.addEventListener("click", () => switchPanel(button.dataset.panelShortcut));
+  });
   $$("[data-open-listing]").forEach((button) => {
     button.addEventListener("click", () => $("#productDialog").showModal());
   });
@@ -636,11 +922,26 @@ function bindEvents() {
   });
   $("#searchInput").addEventListener("input", renderProducts);
   $("#categoryFilter").addEventListener("change", renderProducts);
+  $("#leadSearchInput").addEventListener("input", renderLeadInbox);
+  $("#leadStatusFilter").addEventListener("change", renderLeadInbox);
+  $("#leadList").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-lead-id]");
+    if (!button) return;
+    state.selectedLeadId = button.dataset.leadId;
+    renderLeadInbox();
+  });
+  $("#hotLeadList").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-lead-id]");
+    if (!button) return;
+    state.selectedLeadId = button.dataset.leadId;
+    switchPanel("leads");
+  });
   $("#rangeFilter").addEventListener("change", drawChart);
   $("#matchForm").addEventListener("submit", handleMatchSubmit);
   $("#syncButton").addEventListener("click", async () => {
     try {
       await fetchSupabaseProducts();
+      await fetchLeads();
       updateSyncButton("Synced with Supabase");
       renderAll();
     } catch (error) {
@@ -655,6 +956,7 @@ function init() {
   bindEvents();
   fetchDefaultShopId()
     .then(fetchSupabaseProducts)
+    .then(fetchLeads)
     .catch(() => updateSyncButton("Supabase sync failed"))
     .finally(() => {
       renderAll();

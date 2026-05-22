@@ -25,6 +25,9 @@
           <button class="nav-item" data-panel="inventory" type="button">
             <span>Listings</span>
           </button>
+          <button class="nav-item" data-panel="leads" type="button">
+            <span>Leads</span>
+          </button>
           <button class="nav-item" data-panel="assistant" type="button">
             <span>AI Matches</span>
           </button>
@@ -109,6 +112,17 @@
             </div>
             <div id="healthList" class="health-list"></div>
           </section>
+
+          <section class="lead-strip">
+            <div class="section-heading">
+              <div>
+                <span class="muted-label">Live WhatsApp demand</span>
+                <h2>Hot leads to follow up</h2>
+              </div>
+              <button class="ghost-button" data-panel-shortcut="leads" type="button">Open inbox</button>
+            </div>
+            <div id="hotLeadList" class="hot-lead-list"></div>
+          </section>
         </section>
 
         <section class="panel" id="inventoryPanel">
@@ -124,6 +138,51 @@
           </div>
 
           <div id="productGrid" class="product-grid"></div>
+        </section>
+
+        <section class="panel" id="leadsPanel">
+          <div class="lead-hero">
+            <div>
+              <p class="eyebrow">WhatsApp lead inbox</p>
+              <h2>Know who wants what before you reply</h2>
+            </div>
+            <div class="lead-hero-metrics">
+              <div>
+                <span class="muted-label">Open</span>
+                <strong id="leadOpenCount">0</strong>
+              </div>
+              <div>
+                <span class="muted-label">Hot intent</span>
+                <strong id="leadHotCount">0</strong>
+              </div>
+              <div>
+                <span class="muted-label">Today</span>
+                <strong id="leadTodayCount">0</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="lead-toolbar">
+            <div class="search-box">
+              <span>⌕</span>
+              <input id="leadSearchInput" type="search" placeholder="Search customer, product, message" />
+            </div>
+            <select id="leadStatusFilter" aria-label="Lead status filter">
+              <option value="all">All leads</option>
+              <option value="new">New</option>
+              <option value="follow_up">Follow up</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+
+          <div class="lead-workbench">
+            <section class="lead-list-panel">
+              <div id="leadList" class="lead-list"></div>
+            </section>
+            <section class="lead-detail-panel">
+              <div id="leadDetail" class="lead-detail"></div>
+            </section>
+          </div>
         </section>
 
         <section class="panel" id="assistantPanel">

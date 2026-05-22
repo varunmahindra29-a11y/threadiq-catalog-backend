@@ -175,6 +175,41 @@ async function handleProductsApi(request, response) {
   jsonResponse(response, 405, { ok: false, error: "method_not_allowed" });
 }
 
+async function handleLeadsApi(request, response) {
+  if (request.method !== "GET") {
+    jsonResponse(response, 405, { ok: false, error: "method_not_allowed" });
+    return;
+  }
+  if (!hasSupabaseServerConfig()) {
+    jsonResponse(response, 503, { ok: false, error: "missing_supabase_server_config" });
+    return;
+  }
+
+  const shopId = await ensureDefaultShop();
+  if (!shopId) {
+    jsonResponse(response, 500, { ok: false, error: "default_shop_missing" });
+    return;
+  }
+
+  const leadParams = new URLSearchParams({
+    select: "*",
+    shop_id: `eq.${shopId}`,
+    order: "created_at.desc",
+    limit: "50",
+  });
+  const messageParams = new URLSearchParams({
+    select: "*",
+    shop_id: `eq.${shopId}`,
+    order: "created_at.desc",
+    limit: "100",
+  });
+  const [leads, messages] = await Promise.all([
+    supabaseRequest(`leads?${leadParams.toString()}`),
+    supabaseRequest(`whatsapp_messages?${messageParams.toString()}`).catch(() => []),
+  ]);
+  jsonResponse(response, 200, { ok: true, shop_id: shopId, leads, messages });
+}
+
 function readJsonBody(request) {
   return new Promise((resolve, reject) => {
     let size = 0;
@@ -240,6 +275,10 @@ const server = createServer(async (request, response) => {
     }
     if (pathname === "/api/products") {
       await handleProductsApi(request, response);
+      return;
+    }
+    if (pathname === "/api/leads") {
+      await handleLeadsApi(request, response);
       return;
     }
 

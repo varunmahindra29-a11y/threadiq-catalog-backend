@@ -166,6 +166,31 @@ app.post("/api/products", async (request, response) => {
   }
 });
 
+app.get("/api/leads", async (request, response) => {
+  try {
+    const shopId = await ensureDefaultShop();
+    const leadParams = new URLSearchParams({
+      select: "*",
+      shop_id: `eq.${shopId}`,
+      order: "created_at.desc",
+      limit: "50",
+    });
+    const messageParams = new URLSearchParams({
+      select: "*",
+      shop_id: `eq.${shopId}`,
+      order: "created_at.desc",
+      limit: "100",
+    });
+    const [leads, messages] = await Promise.all([
+      supabaseRequest(`leads?${leadParams.toString()}`),
+      supabaseRequest(`whatsapp_messages?${messageParams.toString()}`).catch(() => []),
+    ]);
+    response.json({ ok: true, shop_id: shopId, leads, messages });
+  } catch (error) {
+    response.status(500).json({ ok: false, error: "leads_fetch_failed", detail: error.message.slice(0, 240) });
+  }
+});
+
 app.get("/health/deep", async (request, response) => {
   try {
     const shops = await listShops(config);

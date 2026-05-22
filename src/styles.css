@@ -177,7 +177,8 @@ h2 {
 
 .topbar-actions,
 .dialog-actions,
-.inventory-toolbar {
+.inventory-toolbar,
+.lead-toolbar {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -244,7 +245,11 @@ h2 {
 .conversation-panel,
 .match-panel,
 .settings-card,
-.product-card {
+.product-card,
+.lead-strip,
+.lead-hero,
+.lead-list-panel,
+.lead-detail-panel {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -270,7 +275,8 @@ h2 {
 
 .analytics-layout,
 .assistant-layout,
-.settings-grid {
+.settings-grid,
+.lead-workbench {
   display: grid;
   grid-template-columns: minmax(0, 1.75fr) minmax(320px, 0.85fr);
   gap: 16px;
@@ -282,7 +288,10 @@ h2 {
 .table-panel,
 .conversation-panel,
 .match-panel,
-.settings-card {
+.settings-card,
+.lead-strip,
+.lead-list-panel,
+.lead-detail-panel {
   padding: 22px;
 }
 
@@ -351,6 +360,300 @@ canvas {
 
 .table-panel {
   margin-top: 16px;
+}
+
+.lead-strip {
+  margin-top: 16px;
+  background:
+    linear-gradient(135deg, rgba(14, 124, 102, 0.08), rgba(47, 102, 208, 0.08)),
+    #ffffff;
+}
+
+.hot-lead-list,
+.lead-list,
+.lead-product-list,
+.lead-timeline {
+  display: grid;
+  gap: 12px;
+}
+
+.hot-lead-card {
+  width: 100%;
+  border: 1px solid rgba(14, 124, 102, 0.16);
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.hot-lead-card:hover,
+.lead-item.active {
+  border-color: rgba(14, 124, 102, 0.45);
+  background: #f6fbf9;
+}
+
+.hot-lead-card strong,
+.hot-lead-card small,
+.lead-item strong,
+.lead-item small {
+  display: block;
+}
+
+.hot-lead-card small,
+.lead-item small {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hot-lead-card em {
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 900;
+  max-width: 240px;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.lead-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: stretch;
+  padding: 24px;
+  background:
+    linear-gradient(135deg, rgba(18, 19, 26, 0.94), rgba(9, 91, 74, 0.9)),
+    #12131a;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.lead-hero .eyebrow,
+.lead-hero .muted-label {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.lead-hero h2 {
+  font-size: clamp(28px, 4vw, 46px);
+  max-width: 720px;
+}
+
+.lead-hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(90px, 1fr));
+  gap: 10px;
+  min-width: 360px;
+}
+
+.lead-hero-metrics div {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.lead-hero-metrics strong {
+  display: block;
+  font-size: 32px;
+  margin-top: 8px;
+}
+
+.lead-toolbar {
+  margin-top: 16px;
+}
+
+.lead-workbench {
+  grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.45fr);
+}
+
+.lead-list-panel,
+.lead-detail-panel {
+  min-height: 560px;
+}
+
+.lead-item {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  text-align: left;
+}
+
+.lead-avatar {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #101828;
+  color: #ffffff;
+  font-weight: 950;
+}
+
+.lead-item-body,
+.lead-line {
+  min-width: 0;
+}
+
+.lead-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.lead-line em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  white-space: nowrap;
+}
+
+.lead-tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.lead-detail {
+  display: grid;
+  gap: 18px;
+}
+
+.lead-detail-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.lead-detail-head p {
+  margin: 10px 0 0;
+  color: #344054;
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  text-decoration: none;
+}
+
+.intent-meter {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-strong);
+}
+
+.intent-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--blue));
+}
+
+.lead-insight-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.lead-insight-grid div,
+.detail-block {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+}
+
+.lead-insight-grid strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 20px;
+}
+
+.detail-block {
+  display: grid;
+  gap: 12px;
+}
+
+.lead-product {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.lead-product img {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  background: var(--surface-strong);
+}
+
+.lead-product strong,
+.lead-product small {
+  display: block;
+}
+
+.lead-product small,
+.lead-timeline p {
+  color: var(--muted);
+}
+
+.lead-product-fallback {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  color: #344054;
+  background: var(--surface-strong);
+  font-weight: 900;
+}
+
+.timeline-row {
+  border-left: 4px solid var(--line);
+  padding: 8px 0 8px 12px;
+}
+
+.timeline-row.outbound {
+  border-color: var(--accent);
+}
+
+.timeline-row.inbound {
+  border-color: var(--blue);
+}
+
+.timeline-row strong,
+.timeline-row span {
+  display: block;
+}
+
+.timeline-row span {
+  margin-top: 4px;
+  color: #344054;
+  line-height: 1.45;
 }
 
 .health-item {
@@ -686,7 +989,10 @@ dialog::backdrop {
   }
 
   .topbar,
-  .inventory-toolbar {
+  .inventory-toolbar,
+  .lead-toolbar,
+  .lead-hero,
+  .lead-detail-head {
     align-items: stretch;
     flex-direction: column;
   }
@@ -703,12 +1009,24 @@ dialog::backdrop {
 
   .stats-grid,
   .product-grid,
-  .form-grid {
+  .form-grid,
+  .lead-hero-metrics,
+  .lead-insight-grid {
     grid-template-columns: 1fr;
   }
 
   .match-form {
     grid-template-columns: 1fr;
+  }
+
+  .hot-lead-card,
+  .lead-product {
+    grid-template-columns: 1fr;
+  }
+
+  .hot-lead-card em {
+    max-width: none;
+    text-align: left;
   }
 
   .sidebar-card {
