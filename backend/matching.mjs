@@ -41,6 +41,8 @@ export function extractTerms(message) {
 }
 
 export function findShopByMessage(shops, message) {
+  if (shops.length === 1) return shops[0];
+
   const normalizedMessage = slugify(message);
   return shops.find((shop) => {
     const nameSlug = slugify(shop.name);

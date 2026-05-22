@@ -16,6 +16,18 @@ http://127.0.0.1:4174
 
 No install step is required. The app uses a small Node static server and browser-native JavaScript.
 
+Product photos can be selected from your computer in the Add product form. The local dev server saves them into `product-images/` and stores a relative path like `/product-images/item.jpg` in Supabase.
+
+For WhatsApp image sending, deploy the app/backend to a public HTTPS URL and set:
+
+```text
+PUBLIC_BASE_URL=https://your-public-domain.example
+```
+
+On Railway, the backend can also use Railway's generated public domain automatically, but set `PUBLIC_BASE_URL` yourself if you use a custom domain.
+
+Meta cannot fetch images from `localhost` or a private Windows folder, so this public base URL is required before uploaded product photos can be sent as WhatsApp image messages.
+
 ## Supabase Setup
 
 Create this table in your Supabase SQL editor:
@@ -74,6 +86,7 @@ WHATSAPP_ACCESS_TOKEN=
 WHATSAPP_VERIFY_TOKEN=
 GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
+PUBLIC_BASE_URL=https://your-public-domain.example
 ```
 
 Create the extra WhatsApp AI tables with:

@@ -31,6 +31,9 @@ export function readConfig() {
     whatsappVerifyToken: process.env.WHATSAPP_VERIFY_TOKEN,
     geminiApiKey: process.env.GEMINI_API_KEY,
     geminiModel: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+    publicBaseUrl:
+      process.env.PUBLIC_BASE_URL ||
+      (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : ""),
     host: process.env.HOST || "0.0.0.0",
     port: Number(process.env.PORT || 8787),
   };

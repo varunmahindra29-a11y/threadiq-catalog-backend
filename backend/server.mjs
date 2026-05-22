@@ -1,5 +1,7 @@
 import express from "express";
-import { dirname, join } from "node:path";
+import { mkdir, writeFile } from "node:fs/promises";
+import { Buffer } from "node:buffer";
+import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getRecentEvents, recordEvent } from "./debug-events.mjs";
 import { readConfig } from "./env.mjs";
@@ -17,9 +19,89 @@ try {
 
 const app = express();
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const productImagesDir = join(root, "product-images");
+const defaultShopSlug = "raj-fashion";
+const defaultShopName = "Raj Fashion";
 
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "8mb" }));
 app.use(express.static(root));
+
+function safeImageName(fileName = "product-image") {
+  const extension = extname(fileName).toLowerCase();
+  const allowed = new Set([".jpg", ".jpeg", ".png", ".webp"]);
+  const safeExtension = allowed.has(extension) ? extension : ".jpg";
+  const base = fileName
+    .replace(/\.[^.]+$/, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48) || "product-image";
+  return `${base}-${Date.now()}${safeExtension}`;
+}
+
+function supabaseHeaders(prefer = "return=representation") {
+  const headers = {
+    apikey: config.supabaseServiceRoleKey,
+    "Content-Type": "application/json",
+    Prefer: prefer,
+  };
+  if (!config.supabaseServiceRoleKey.startsWith("sb_")) {
+    headers.Authorization = `Bearer ${config.supabaseServiceRoleKey}`;
+  }
+  return headers;
+}
+
+async function supabaseRequest(path, options = {}) {
+  const response = await fetch(`${config.supabaseUrl.replace(/\/$/, "")}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      ...supabaseHeaders(options.prefer),
+      ...(options.headers || {}),
+    },
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Supabase request failed ${response.status}: ${detail}`);
+  }
+  if (response.status === 204) return null;
+  return response.json();
+}
+
+async function ensureDefaultShop() {
+  const query = new URLSearchParams({
+    select: "id",
+    slug: `eq.${defaultShopSlug}`,
+    limit: "1",
+  });
+  const existing = await supabaseRequest(`shops?${query.toString()}`);
+  if (existing?.[0]?.id) return existing[0].id;
+  const rows = await supabaseRequest("shops", {
+    method: "POST",
+    body: JSON.stringify({
+      name: defaultShopName,
+      slug: defaultShopSlug,
+      owner_name: `${defaultShopName} Owner`,
+      tone: "friendly, confident, local fashion salesman",
+    }),
+  });
+  return rows?.[0]?.id || "";
+}
+
+function normalizeProductPayload(body, shopId) {
+  return {
+    shop_id: shopId,
+    name: String(body.name || "").trim(),
+    category: String(body.category || "").trim() || "General",
+    price: Number(body.price || 0),
+    stock: Number(body.stock || 0),
+    sizes: Array.isArray(body.sizes) ? body.sizes : [],
+    colors: Array.isArray(body.colors) ? body.colors : [],
+    image_url: body.image_url || "",
+    status: body.status || "active",
+    inquiries: Number(body.inquiries || 0),
+    orders: Number(body.orders || 0),
+  };
+}
 
 function requireDebugToken(request, response, next) {
   const token = request.get("x-debug-token");
@@ -36,6 +118,52 @@ app.get("/health", (request, response) => {
     provider: "gemini",
     model: config.geminiModel,
   });
+});
+
+app.post("/api/product-images", async (request, response) => {
+  const match = String(request.body?.dataUrl || "").match(/^data:image\/(?:jpeg|jpg|png|webp);base64,(.+)$/);
+  if (!match) {
+    response.status(400).json({ ok: false, error: "invalid_image" });
+    return;
+  }
+
+  const fileName = safeImageName(request.body?.fileName);
+  await mkdir(productImagesDir, { recursive: true });
+  await writeFile(join(productImagesDir, fileName), Buffer.from(match[1], "base64"));
+  response.json({ ok: true, image_url: `/product-images/${fileName}` });
+});
+
+app.get("/api/products", async (request, response) => {
+  try {
+    const shopId = await ensureDefaultShop();
+    const params = new URLSearchParams({
+      select: "*",
+      shop_id: `eq.${shopId}`,
+      order: "created_at.desc",
+    });
+    const products = await supabaseRequest(`products?${params.toString()}`);
+    response.json({ ok: true, shop_id: shopId, products });
+  } catch (error) {
+    response.status(500).json({ ok: false, error: "products_fetch_failed", detail: error.message.slice(0, 240) });
+  }
+});
+
+app.post("/api/products", async (request, response) => {
+  try {
+    const shopId = await ensureDefaultShop();
+    const product = normalizeProductPayload(request.body || {}, shopId);
+    if (!product.name || !product.price) {
+      response.status(400).json({ ok: false, error: "missing_product_fields" });
+      return;
+    }
+    const rows = await supabaseRequest("products", {
+      method: "POST",
+      body: JSON.stringify(product),
+    });
+    response.json({ ok: true, shop_id: shopId, product: rows?.[0] || product });
+  } catch (error) {
+    response.status(500).json({ ok: false, error: "product_insert_failed", detail: error.message.slice(0, 240) });
+  }
 });
 
 app.get("/health/deep", async (request, response) => {
@@ -74,6 +202,7 @@ app.get("/debug/config", requireDebugToken, (request, response) => {
     supabaseServiceRoleKeyPresent: Boolean(config.supabaseServiceRoleKey),
     geminiApiKeyPresent: Boolean(config.geminiApiKey),
     geminiModel: config.geminiModel,
+    publicBaseUrlPresent: Boolean(config.publicBaseUrl),
   });
 });
 

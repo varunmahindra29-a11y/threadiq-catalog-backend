@@ -12,6 +12,12 @@ test("findShopByMessage matches shop name and slug", () => {
   assert.equal(findShopByMessage(shops, "urban rack black shirt").id, "2");
 });
 
+test("findShopByMessage defaults to the only shop", () => {
+  const shops = [{ id: "1", name: "Raj Fashion", slug: "raj-fashion" }];
+
+  assert.equal(findShopByMessage(shops, "black shirt under 2000").id, "1");
+});
+
 test("rankProducts prefers budget and matching terms", () => {
   const products = [
     { id: "a", name: "Blue Denim Jacket", category: "Jackets", price: 3000, stock: 5, colors: ["Blue"], sizes: ["M"], inquiries: 5 },

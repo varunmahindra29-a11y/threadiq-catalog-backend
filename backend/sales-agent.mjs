@@ -38,6 +38,13 @@ function wantsCatalog(messageText) {
   );
 }
 
+function publicProductImageUrl(config, imageUrl) {
+  if (!imageUrl) return "";
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  if (!config.publicBaseUrl) return "";
+  return new URL(imageUrl, `${config.publicBaseUrl.replace(/\/$/, "")}/`).href;
+}
+
 async function sendFallbackChat(config, message, reason) {
   let reply;
   try {
@@ -130,12 +137,13 @@ export async function handleCustomerMessage(config, message) {
 
   await sendText(config, message.from, `${shop.name} se top options bhej raha hoon. Jo pasand aaye uska size bol dena.`);
   for (const item of captions) {
-    const captionWithLink = item.product.image_url ? `${item.caption}\n\nImage: ${item.product.image_url}` : item.caption;
+    const publicImageUrl = publicProductImageUrl(config, item.product.image_url);
+    const captionWithLink = item.product.image_url ? `${item.caption}\n\nImage: ${publicImageUrl || item.product.image_url}` : item.caption;
     try {
-      if (item.product.image_url) {
-        await sendImage(config, message.from, item.product.image_url, item.caption);
+      if (publicImageUrl) {
+        await sendImage(config, message.from, publicImageUrl, item.caption);
       } else {
-        await sendText(config, message.from, item.caption);
+        await sendText(config, message.from, captionWithLink);
       }
     } catch (error) {
       console.error(`Product image send failed: ${error.message}`);

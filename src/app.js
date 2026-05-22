@@ -89,6 +89,7 @@ const leadSeries = {
 
 const state = {
   products: [],
+  defaultShopId: "",
   config: {
     url: SUPABASE_URL,
     key: SUPABASE_ANON_KEY,
@@ -123,11 +124,33 @@ function supabaseHeaders() {
 }
 
 async function fetchSupabaseProducts() {
+  try {
+    const localResponse = await fetch("/api/products");
+    if (localResponse.ok) {
+      const result = await localResponse.json();
+      state.defaultShopId = result.shop_id || state.defaultShopId;
+      state.products = Array.isArray(result.products) ? result.products.map(normalizeProduct) : [];
+      return;
+    }
+    if (localResponse.status !== 404) {
+      throw new Error("Local products API failed");
+    }
+  } catch {
+    // Fall back to browser-side Supabase for deployments without the local API.
+  }
+
   if (!hasSupabaseConfig()) {
     updateSyncButton("Supabase config missing");
     return;
   }
-  const endpoint = `${state.config.url.replace(/\/$/, "")}/rest/v1/products?select=*&order=created_at.desc`;
+  const params = new URLSearchParams({
+    select: "*",
+    order: "created_at.desc",
+  });
+  if (state.defaultShopId) {
+    params.set("shop_id", `eq.${state.defaultShopId}`);
+  }
+  const endpoint = `${state.config.url.replace(/\/$/, "")}/rest/v1/products?${params.toString()}`;
   const response = await fetch(endpoint, { headers: supabaseHeaders() });
   if (!response.ok) throw new Error("Supabase products fetch failed");
   const rows = await response.json();
@@ -136,15 +159,51 @@ async function fetchSupabaseProducts() {
   }
 }
 
+async function fetchDefaultShopId() {
+  if (!hasSupabaseConfig()) return "";
+  const endpoint = `${state.config.url.replace(/\/$/, "")}/rest/v1/shops?select=id&slug=eq.raj-fashion&limit=1`;
+  const response = await fetch(endpoint, { headers: supabaseHeaders() });
+  if (!response.ok) return "";
+  const rows = await response.json();
+  state.defaultShopId = rows?.[0]?.id || "";
+  return state.defaultShopId;
+}
+
 async function insertSupabaseProduct(product) {
+  try {
+    const localResponse = await fetch("/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(product),
+    });
+    if (localResponse.ok) {
+      const result = await localResponse.json();
+      state.defaultShopId = result.shop_id || state.defaultShopId;
+      return normalizeProduct(result.product || product);
+    }
+    if (localResponse.status !== 404) {
+      const result = await localResponse.json().catch(() => ({}));
+      throw new Error(result.error || "Local product publish failed");
+    }
+  } catch {
+    throw new Error("Local product publish failed");
+  }
+
   if (!hasSupabaseConfig()) {
     throw new Error("Supabase config missing");
+  }
+  if (!state.defaultShopId) {
+    await fetchDefaultShopId();
+  }
+  if (!state.defaultShopId) {
+    throw new Error("Default shop missing");
   }
   const endpoint = `${state.config.url.replace(/\/$/, "")}/rest/v1/products`;
   const response = await fetch(endpoint, {
     method: "POST",
     headers: supabaseHeaders(),
     body: JSON.stringify({
+      shop_id: state.defaultShopId,
       name: product.name,
       category: product.category,
       price: product.price,
@@ -398,10 +457,75 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resolve(reader.result));
+    reader.addEventListener("error", () => reject(reader.error));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadProductImage(file) {
+  if (!file || !file.size) return "";
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    throw new Error("Unsupported image type");
+  }
+  const dataUrl = await readFileAsDataUrl(file);
+  const response = await fetch("/api/product-images", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fileName: file.name,
+      dataUrl,
+    }),
+  });
+  if (!response.ok) throw new Error("Image upload failed");
+  const result = await response.json();
+  return result.image_url || "";
+}
+
+function resetImagePreview() {
+  const preview = $("#imagePreview");
+  const image = $("#imagePreviewImg");
+  if (image.dataset.previewUrl) {
+    URL.revokeObjectURL(image.dataset.previewUrl);
+  }
+  image.removeAttribute("src");
+  image.dataset.previewUrl = "";
+  $("#imagePreviewName").textContent = "";
+  preview.hidden = true;
+}
+
+function updateImagePreview(file) {
+  resetImagePreview();
+  if (!file || !file.size) return;
+  const previewUrl = URL.createObjectURL(file);
+  const image = $("#imagePreviewImg");
+  image.src = previewUrl;
+  image.dataset.previewUrl = previewUrl;
+  $("#imagePreviewName").textContent = file.name;
+  $("#imagePreview").hidden = false;
+}
+
 async function handleProductSubmit(event) {
+  if (event.submitter?.value === "cancel") {
+    resetImagePreview();
+    return;
+  }
   event.preventDefault();
   const form = event.currentTarget;
   const formData = new FormData(form);
+  const imageFile = formData.get("image_file");
+  let imageUrl = "";
+
+  try {
+    imageUrl = await uploadProductImage(imageFile);
+  } catch (error) {
+    alert("Image upload nahi ho paayi. JPG, PNG ya WebP file select karo.");
+    return;
+  }
+
   const product = normalizeProduct({
     id: crypto.randomUUID(),
     name: formData.get("name"),
@@ -410,7 +534,7 @@ async function handleProductSubmit(event) {
     stock: formData.get("stock"),
     sizes: splitList(formData.get("sizes")),
     colors: splitList(formData.get("colors")),
-    image_url: formData.get("image_url"),
+    image_url: imageUrl,
     status: "active",
     inquiries: Math.floor(Math.random() * 12) + 3,
     orders: Math.floor(Math.random() * 4),
@@ -421,11 +545,12 @@ async function handleProductSubmit(event) {
     state.products.unshift(inserted);
     await fetchSupabaseProducts();
   } catch (error) {
-    alert("Supabase config ya policy issue hai. Listing publish nahi hui.");
+    alert("Supabase config, shop setup, ya policy issue hai. Listing publish nahi hui.");
     return;
   }
 
   form.reset();
+  resetImagePreview();
   $("#productDialog").close();
   renderAll();
   switchPanel("inventory");
@@ -502,6 +627,13 @@ function bindEvents() {
     button.addEventListener("click", () => $("#productDialog").showModal());
   });
   $("#productForm").addEventListener("submit", handleProductSubmit);
+  $("#productDialog").addEventListener("close", () => {
+    if (!$("#productDialog").returnValue) return;
+    resetImagePreview();
+  });
+  $("#productImageInput").addEventListener("change", (event) => {
+    updateImagePreview(event.currentTarget.files?.[0]);
+  });
   $("#searchInput").addEventListener("input", renderProducts);
   $("#categoryFilter").addEventListener("change", renderProducts);
   $("#rangeFilter").addEventListener("change", drawChart);
@@ -521,7 +653,8 @@ function bindEvents() {
 function init() {
   loadLocalState();
   bindEvents();
-  fetchSupabaseProducts()
+  fetchDefaultShopId()
+    .then(fetchSupabaseProducts)
     .catch(() => updateSyncButton("Supabase sync failed"))
     .finally(() => {
       renderAll();
