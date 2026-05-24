@@ -265,10 +265,13 @@
         <div class="dialog-head">
           <div>
             <span class="muted-label">Inventory listing</span>
-            <h2>Add product</h2>
+            <h2 id="productDialogTitle">Add product</h2>
           </div>
           <button class="icon-button" value="cancel" formmethod="dialog" type="submit" aria-label="Close">×</button>
         </div>
+
+        <input name="id" type="hidden" />
+        <input name="existing_image_url" type="hidden" />
 
         <div class="form-grid">
           <label>
@@ -296,6 +299,10 @@
             <input name="colors" placeholder="Black, White" />
           </label>
           <label class="wide">
+            Description
+            <textarea name="description" rows="3" placeholder="Short product details for WhatsApp caption"></textarea>
+          </label>
+          <label class="wide">
             Product photo
             <input id="productImageInput" name="image_file" type="file" accept="image/png,image/jpeg,image/webp" />
           </label>
@@ -307,7 +314,9 @@
 
         <div class="dialog-actions">
           <button class="ghost-button" value="cancel" formmethod="dialog" type="submit">Cancel</button>
-          <button class="primary-button" type="submit">Publish listing</button>
+          <button class="danger-button" id="deleteProductButton" type="button" hidden>Delete</button>
+          <button class="ghost-button" id="pauseProductButton" type="button" hidden>Pause</button>
+          <button class="primary-button" id="saveProductButton" type="submit">Publish listing</button>
         </div>
       </form>
     </dialog>

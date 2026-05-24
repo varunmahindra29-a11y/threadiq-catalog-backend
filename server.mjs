@@ -123,6 +123,7 @@ function normalizeProductPayload(body, shopId) {
   return {
     shop_id: shopId,
     name: String(body.name || "").trim(),
+    description: String(body.description || "").trim(),
     category: String(body.category || "").trim() || "General",
     price: Number(body.price || 0),
     stock: Number(body.stock || 0),
@@ -133,6 +134,11 @@ function normalizeProductPayload(body, shopId) {
     inquiries: Number(body.inquiries || 0),
     orders: Number(body.orders || 0),
   };
+}
+
+function productIdFromRequest(request) {
+  const url = new URL(request.url || "/", `http://${host}:${port}`);
+  return url.searchParams.get("id") || "";
 }
 
 async function handleProductsApi(request, response) {
@@ -169,6 +175,47 @@ async function handleProductsApi(request, response) {
       body: JSON.stringify(product),
     });
     jsonResponse(response, 200, { ok: true, shop_id: shopId, product: rows?.[0] || product });
+    return;
+  }
+
+  if (request.method === "PATCH") {
+    const productId = productIdFromRequest(request);
+    if (!productId) {
+      jsonResponse(response, 400, { ok: false, error: "missing_product_id" });
+      return;
+    }
+    const product = normalizeProductPayload(await readJsonBody(request), shopId);
+    if (!product.name || !product.price) {
+      jsonResponse(response, 400, { ok: false, error: "missing_product_fields" });
+      return;
+    }
+    const params = new URLSearchParams({
+      id: `eq.${productId}`,
+      shop_id: `eq.${shopId}`,
+    });
+    const rows = await supabaseRequest(`products?${params.toString()}`, {
+      method: "PATCH",
+      body: JSON.stringify(product),
+    });
+    jsonResponse(response, 200, { ok: true, shop_id: shopId, product: rows?.[0] || { ...product, id: productId } });
+    return;
+  }
+
+  if (request.method === "DELETE") {
+    const productId = productIdFromRequest(request);
+    if (!productId) {
+      jsonResponse(response, 400, { ok: false, error: "missing_product_id" });
+      return;
+    }
+    const params = new URLSearchParams({
+      id: `eq.${productId}`,
+      shop_id: `eq.${shopId}`,
+    });
+    await supabaseRequest(`products?${params.toString()}`, {
+      method: "DELETE",
+      prefer: "return=minimal",
+    });
+    jsonResponse(response, 200, { ok: true, product_id: productId });
     return;
   }
 

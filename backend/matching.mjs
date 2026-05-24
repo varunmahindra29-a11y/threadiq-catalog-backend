@@ -62,6 +62,7 @@ export function rankProducts(products, message, limit = 3) {
     .map((product) => {
       const text = [
         product.name,
+        product.description,
         product.category,
         ...(Array.isArray(product.colors) ? product.colors : []),
         ...(Array.isArray(product.sizes) ? product.sizes : []),

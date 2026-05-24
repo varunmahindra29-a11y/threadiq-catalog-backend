@@ -1,3 +1,4 @@
+import { fallbackProducts, fallbackShop } from "./fallback-products.mjs";
 import { generateFallbackChatReply, generateSalesCaptions, fallbackCaption } from "./gemini.mjs";
 import { detectInterest, findShopByMessage, rankProducts } from "./matching.mjs";
 import { createLead, listProductsForShop, listShops, logWhatsappMessage } from "./supabase.mjs";
@@ -68,11 +69,11 @@ export async function handleCustomerMessage(config, message) {
     shops = await listShops(config);
   } catch (error) {
     console.error(`Supabase shops lookup failed: ${error.message}`);
-    return sendFallbackChat(config, message, "catalog_unavailable");
+    shops = [fallbackShop()];
   }
 
   if (!shops.length) {
-    return sendFallbackChat(config, message, "no_shops");
+    shops = [fallbackShop()];
   }
 
   const shop = findShopByMessage(shops, message.text);
@@ -102,7 +103,11 @@ export async function handleCustomerMessage(config, message) {
     products = await listProductsForShop(config, shop.id);
   } catch (error) {
     console.error(`Supabase products lookup failed: ${error.message}`);
-    return sendFallbackChat(config, message, "products_unavailable");
+    products = fallbackProducts(config, shop.id);
+  }
+
+  if (!products.length) {
+    products = fallbackProducts(config, shop.id);
   }
 
   const matchedProducts = rankProducts(products, message.text, 3);
@@ -159,15 +164,19 @@ export async function handleCustomerMessage(config, message) {
   }
 
   if (detectInterest(message.text)) {
-    await createLead(config, {
-      shopId: shop.id,
-      customerWhatsapp: message.from,
-      customerMessage: message.text,
-      matchedProductIds: matchedProducts.map((product) => product.id),
-    });
+    try {
+      await createLead(config, {
+        shopId: shop.id,
+        customerWhatsapp: message.from,
+        customerMessage: message.text,
+        matchedProductIds: matchedProducts.map((product) => product.id),
+      });
 
-    if (shop.owner_whatsapp) {
-      await sendText(config, shop.owner_whatsapp, ownerAlert(shop, message.from, message.text, matchedProducts));
+      if (shop.owner_whatsapp) {
+        await sendText(config, shop.owner_whatsapp, ownerAlert(shop, message.from, message.text, matchedProducts));
+      }
+    } catch (error) {
+      console.warn(`Skipping lead capture: ${error.message}`);
     }
     await sendText(config, message.from, "Done bhai, maine shop owner ko lead bhej di hai. Aap size/color confirm kar do to process fast ho jayega.");
   }

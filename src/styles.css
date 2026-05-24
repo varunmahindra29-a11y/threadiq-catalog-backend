@@ -30,7 +30,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -304,7 +305,8 @@ h2 {
 }
 
 select,
-input {
+input,
+textarea {
   border: 1px solid var(--line);
   border-radius: 8px;
   min-height: 42px;
@@ -312,6 +314,12 @@ input {
   color: var(--ink);
   background: #ffffff;
   outline-color: var(--accent);
+}
+
+textarea {
+  min-height: 84px;
+  padding: 10px 12px;
+  resize: vertical;
 }
 
 input[type="file"] {
@@ -1366,6 +1374,17 @@ body {
   font-weight: 900;
 }
 
+.danger-button {
+  min-height: 46px;
+  border: 1px solid rgba(217, 45, 32, 0.2);
+  border-radius: 8px;
+  padding: 0 18px;
+  background: #fff1f0;
+  color: #b42318;
+  font-weight: 900;
+  box-shadow: 0 10px 28px rgba(217, 45, 32, 0.08);
+}
+
 /* Product catalog view */
 .catalog-toolbar {
   display: grid;
@@ -1478,6 +1497,40 @@ body {
 
 .favorite-button.active {
   color: #e11d48;
+}
+
+.product-actions {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.catalog-card:hover .product-actions,
+.catalog-card:focus-within .product-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.product-actions button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 13px;
+  background: rgba(6, 16, 30, 0.92);
+  color: #ffffff;
+  font-weight: 900;
+  box-shadow: 0 12px 30px rgba(16, 24, 40, 0.22);
+}
+
+.product-actions button:last-child {
+  background: rgba(180, 35, 24, 0.92);
 }
 
 #inventoryPanel .product-content {
@@ -1624,8 +1677,14 @@ body {
   }
 
   .primary-button,
-  .ghost-button {
+  .ghost-button,
+  .danger-button {
     width: 100%;
+  }
+
+  .product-actions {
+    opacity: 1;
+    transform: none;
   }
 
   .stats-grid,

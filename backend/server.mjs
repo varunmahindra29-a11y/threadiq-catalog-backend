@@ -5,9 +5,10 @@ import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getRecentEvents, recordEvent } from "./debug-events.mjs";
 import { readConfig } from "./env.mjs";
+import { firstFallbackImageUrl } from "./fallback-products.mjs";
 import { handleWhatsappPayload } from "./sales-agent.mjs";
 import { listShops } from "./supabase.mjs";
-import { sendText } from "./whatsapp.mjs";
+import { sendImage, sendText } from "./whatsapp.mjs";
 
 let config;
 try {
@@ -91,6 +92,7 @@ function normalizeProductPayload(body, shopId) {
   return {
     shop_id: shopId,
     name: String(body.name || "").trim(),
+    description: String(body.description || "").trim(),
     category: String(body.category || "").trim() || "General",
     price: Number(body.price || 0),
     stock: Number(body.stock || 0),
@@ -163,6 +165,55 @@ app.post("/api/products", async (request, response) => {
     response.json({ ok: true, shop_id: shopId, product: rows?.[0] || product });
   } catch (error) {
     response.status(500).json({ ok: false, error: "product_insert_failed", detail: error.message.slice(0, 240) });
+  }
+});
+
+app.patch("/api/products", async (request, response) => {
+  try {
+    const productId = request.query.id;
+    if (!productId) {
+      response.status(400).json({ ok: false, error: "missing_product_id" });
+      return;
+    }
+    const shopId = await ensureDefaultShop();
+    const product = normalizeProductPayload(request.body || {}, shopId);
+    if (!product.name || !product.price) {
+      response.status(400).json({ ok: false, error: "missing_product_fields" });
+      return;
+    }
+    const params = new URLSearchParams({
+      id: `eq.${productId}`,
+      shop_id: `eq.${shopId}`,
+    });
+    const rows = await supabaseRequest(`products?${params.toString()}`, {
+      method: "PATCH",
+      body: JSON.stringify(product),
+    });
+    response.json({ ok: true, shop_id: shopId, product: rows?.[0] || { ...product, id: productId } });
+  } catch (error) {
+    response.status(500).json({ ok: false, error: "product_update_failed", detail: error.message.slice(0, 240) });
+  }
+});
+
+app.delete("/api/products", async (request, response) => {
+  try {
+    const productId = request.query.id;
+    if (!productId) {
+      response.status(400).json({ ok: false, error: "missing_product_id" });
+      return;
+    }
+    const shopId = await ensureDefaultShop();
+    const params = new URLSearchParams({
+      id: `eq.${productId}`,
+      shop_id: `eq.${shopId}`,
+    });
+    await supabaseRequest(`products?${params.toString()}`, {
+      method: "DELETE",
+      prefer: "return=minimal",
+    });
+    response.json({ ok: true, product_id: productId });
+  } catch (error) {
+    response.status(500).json({ ok: false, error: "product_delete_failed", detail: error.message.slice(0, 240) });
   }
 });
 
@@ -253,6 +304,32 @@ app.post("/debug/whatsapp/send-test", requireDebugToken, async (request, respons
     response.status(500).json({
       ok: false,
       error: "whatsapp_send_failed",
+      detail: error.message.slice(0, 500),
+    });
+  }
+});
+
+app.post("/debug/whatsapp/send-test-image", requireDebugToken, async (request, response) => {
+  const to = request.body?.to;
+  const imageUrl = request.body?.image_url || firstFallbackImageUrl(config);
+  const caption = request.body?.caption || "ThreadIQ product photo test.";
+  if (!to) {
+    response.status(400).json({ ok: false, error: "missing_to" });
+    return;
+  }
+  if (!imageUrl) {
+    response.status(400).json({ ok: false, error: "missing_image_url" });
+    return;
+  }
+
+  try {
+    const result = await sendImage(config, to, imageUrl, caption);
+    response.json({ ok: true, image_url: imageUrl, result });
+  } catch (error) {
+    response.status(500).json({
+      ok: false,
+      error: "whatsapp_image_send_failed",
+      image_url: imageUrl,
       detail: error.message.slice(0, 500),
     });
   }

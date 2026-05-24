@@ -255,6 +255,7 @@ async function insertSupabaseProduct(product) {
     body: JSON.stringify({
       shop_id: state.defaultShopId,
       name: product.name,
+      description: product.description,
       category: product.category,
       price: product.price,
       stock: product.stock,
@@ -271,10 +272,29 @@ async function insertSupabaseProduct(product) {
   return rows[0] ? normalizeProduct(rows[0]) : product;
 }
 
+async function updateSupabaseProduct(product) {
+  const response = await fetch(`/api/products?id=${encodeURIComponent(product.id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(product),
+  });
+  if (!response.ok) throw new Error("Product update failed");
+  const result = await response.json();
+  return normalizeProduct(result.product || product);
+}
+
+async function deleteSupabaseProduct(productId) {
+  const response = await fetch(`/api/products?id=${encodeURIComponent(productId)}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Product delete failed");
+}
+
 function normalizeProduct(product) {
   return {
     id: product.id || crypto.randomUUID(),
     name: product.name || "Untitled product",
+    description: product.description || "",
     category: product.category || "General",
     price: Number(product.price || 0),
     stock: Number(product.stock || 0),
@@ -395,6 +415,10 @@ function renderProductCard(product) {
       <div class="product-media">
         <img src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}" loading="lazy" />
         <button class="favorite-button" type="button" aria-label="Save ${escapeHtml(product.name)}">♡</button>
+        <div class="product-actions">
+          <button type="button" data-edit-product="${escapeHtml(product.id)}">Edit</button>
+          <button type="button" data-delete-product="${escapeHtml(product.id)}">Delete</button>
+        </div>
       </div>
       <div class="product-content">
         <div class="product-title">
@@ -854,6 +878,37 @@ function updateImagePreview(file) {
   $("#imagePreview").hidden = false;
 }
 
+function openProductDialog(product = null) {
+  const form = $("#productForm");
+  const isEdit = Boolean(product);
+  form.reset();
+  resetImagePreview();
+  form.elements.id.value = product?.id || "";
+  form.elements.existing_image_url.value = product?.image_url || "";
+  form.elements.name.value = product?.name || "";
+  form.elements.description.value = product?.description || "";
+  form.elements.category.value = product?.category || "";
+  form.elements.price.value = product?.price || "";
+  form.elements.stock.value = product?.stock || "";
+  form.elements.sizes.value = product?.sizes?.join(", ") || "";
+  form.elements.colors.value = product?.colors?.join(", ") || "";
+  $("#productDialogTitle").textContent = isEdit ? "Edit product" : "Add product";
+  $("#saveProductButton").textContent = isEdit ? "Save changes" : "Publish listing";
+  $("#deleteProductButton").hidden = !isEdit;
+  $("#pauseProductButton").hidden = !isEdit;
+  $("#pauseProductButton").textContent = product?.status === "paused" ? "Resume" : "Pause";
+  $("#productDialog").showModal();
+}
+
+function closeProductDialog() {
+  const productDialog = $("#productDialog");
+  $("#productForm").reset();
+  resetImagePreview();
+  $("#deleteProductButton").hidden = true;
+  $("#pauseProductButton").hidden = true;
+  if (productDialog.open) productDialog.close();
+}
+
 async function handleProductSubmit(event) {
   if (event.submitter?.value === "cancel") {
     resetImagePreview();
@@ -863,6 +918,9 @@ async function handleProductSubmit(event) {
   const form = event.currentTarget;
   const formData = new FormData(form);
   const imageFile = formData.get("image_file");
+  const productId = formData.get("id");
+  const existingImageUrl = formData.get("existing_image_url");
+  const existingProduct = state.products.find((product) => product.id === productId);
   let imageUrl = "";
 
   try {
@@ -875,31 +933,64 @@ async function handleProductSubmit(event) {
   const product = normalizeProduct({
     id: crypto.randomUUID(),
     name: formData.get("name"),
+    description: formData.get("description"),
     category: formData.get("category"),
     price: formData.get("price"),
     stock: formData.get("stock"),
     sizes: splitList(formData.get("sizes")),
     colors: splitList(formData.get("colors")),
-    image_url: imageUrl,
-    status: "active",
-    inquiries: Math.floor(Math.random() * 12) + 3,
-    orders: Math.floor(Math.random() * 4),
+    image_url: imageUrl || existingImageUrl,
+    status: existingProduct?.status || "active",
+    inquiries: existingProduct?.inquiries ?? Math.floor(Math.random() * 12) + 3,
+    orders: existingProduct?.orders ?? Math.floor(Math.random() * 4),
   });
 
   try {
-    const inserted = await insertSupabaseProduct(product);
-    state.products.unshift(inserted);
+    if (productId) {
+      const updated = await updateSupabaseProduct({ ...product, id: productId });
+      state.products = state.products.map((item) => (item.id === productId ? updated : item));
+    } else {
+      const inserted = await insertSupabaseProduct(product);
+      state.products.unshift(inserted);
+    }
     await fetchSupabaseProducts();
   } catch (error) {
-    alert("Supabase config, shop setup, ya policy issue hai. Listing publish nahi hui.");
+    alert("Product save nahi hua. Supabase ya API issue check karo.");
     return;
   }
 
-  form.reset();
-  resetImagePreview();
-  $("#productDialog").close();
+  closeProductDialog();
   renderAll();
   switchPanel("inventory");
+}
+
+async function handleDeleteProduct(productId) {
+  const product = state.products.find((item) => item.id === productId);
+  if (!product) return;
+  const confirmed = confirm(`Delete ${product.name}? Ye product WhatsApp AI recommendations se bhi hat jayega.`);
+  if (!confirmed) return;
+  try {
+    await deleteSupabaseProduct(productId);
+    state.products = state.products.filter((item) => item.id !== productId);
+    closeProductDialog();
+    renderAll();
+  } catch {
+    alert("Product delete nahi hua. API ya Supabase issue check karo.");
+  }
+}
+
+async function handlePauseProduct(productId) {
+  const product = state.products.find((item) => item.id === productId);
+  if (!product) return;
+  const nextStatus = product.status === "paused" ? "active" : "paused";
+  try {
+    const updated = await updateSupabaseProduct({ ...product, status: nextStatus });
+    state.products = state.products.map((item) => (item.id === productId ? updated : item));
+    closeProductDialog();
+    renderAll();
+  } catch {
+    alert("Product status update nahi hua.");
+  }
 }
 
 function updateSyncButton(message) {
@@ -973,11 +1064,11 @@ function bindEvents() {
     button.addEventListener("click", () => switchPanel(button.dataset.panelShortcut));
   });
   $$("[data-open-listing]").forEach((button) => {
-    button.addEventListener("click", () => $("#productDialog").showModal());
+    button.addEventListener("click", () => openProductDialog());
   });
   $("#healthList").addEventListener("click", (event) => {
     if (event.target.closest("[data-open-listing]")) {
-      $("#productDialog").showModal();
+      openProductDialog();
     }
   });
   $("#productForm").addEventListener("submit", handleProductSubmit);
@@ -1016,10 +1107,30 @@ function bindEvents() {
     renderProducts();
   });
   $("#productGrid").addEventListener("click", (event) => {
-    const button = event.target.closest(".favorite-button");
-    if (!button) return;
-    button.classList.toggle("active");
-    button.textContent = button.classList.contains("active") ? "♥" : "♡";
+    const favoriteButton = event.target.closest(".favorite-button");
+    if (favoriteButton) {
+      favoriteButton.classList.toggle("active");
+      favoriteButton.textContent = favoriteButton.classList.contains("active") ? "♥" : "♡";
+      return;
+    }
+    const editButton = event.target.closest("[data-edit-product]");
+    if (editButton) {
+      const product = state.products.find((item) => item.id === editButton.dataset.editProduct);
+      if (product) openProductDialog(product);
+      return;
+    }
+    const deleteButton = event.target.closest("[data-delete-product]");
+    if (deleteButton) {
+      handleDeleteProduct(deleteButton.dataset.deleteProduct);
+    }
+  });
+  $("#deleteProductButton").addEventListener("click", () => {
+    const productId = $("#productForm").elements.id.value;
+    if (productId) handleDeleteProduct(productId);
+  });
+  $("#pauseProductButton").addEventListener("click", () => {
+    const productId = $("#productForm").elements.id.value;
+    if (productId) handlePauseProduct(productId);
   });
   $("#leadSearchInput").addEventListener("input", renderLeadInbox);
   $("#leadStatusFilter").addEventListener("change", renderLeadInbox);

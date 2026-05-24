@@ -27,7 +27,7 @@ const samples = [
     stock: 12,
     sizes: ["M", "L", "XL"],
     colors: ["Black"],
-    image_url: "https://images.unsplash.com/photo-1614251056216-f748f76cd228?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/product-images/black-party-kurta.jpg",
     status: "active",
     inquiries: 32,
     orders: 8,
@@ -40,7 +40,7 @@ const samples = [
     stock: 18,
     sizes: ["S", "M", "L", "XL"],
     colors: ["White"],
-    image_url: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/product-images/white-linen-shirt.jpg",
     status: "active",
     inquiries: 27,
     orders: 6,
@@ -53,7 +53,7 @@ const samples = [
     stock: 9,
     sizes: ["M", "L", "XL"],
     colors: ["Blue"],
-    image_url: "https://images.unsplash.com/photo-1543076447-215ad9ba6923?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/product-images/blue-denim-jacket.jpg",
     status: "active",
     inquiries: 24,
     orders: 5,
@@ -66,7 +66,7 @@ const samples = [
     stock: 10,
     sizes: ["S", "M", "L"],
     colors: ["Rust", "Orange"],
-    image_url: "https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/product-images/rust-kurta-set.jpg",
     status: "active",
     inquiries: 21,
     orders: 4,
@@ -79,7 +79,7 @@ const samples = [
     stock: 14,
     sizes: ["30", "32", "34", "36"],
     colors: ["Sage", "Green"],
-    image_url: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/product-images/sage-trousers.jpg",
     status: "active",
     inquiries: 19,
     orders: 3,
@@ -92,7 +92,7 @@ const samples = [
     stock: 20,
     sizes: ["7", "8", "9", "10"],
     colors: ["White"],
-    image_url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/product-images/white-sneakers.jpg",
     status: "active",
     inquiries: 30,
     orders: 9,
@@ -111,24 +111,87 @@ function createHeaders() {
   return headers;
 }
 
-async function seed() {
-  const endpoint = `${config.supabaseUrl.replace(/\/$/, "")}/rest/v1/products`;
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: createHeaders(),
-    body: JSON.stringify(samples),
+async function supabaseRequest(path, options = {}) {
+  const response = await fetch(`${config.supabaseUrl.replace(/\/$/, "")}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      ...createHeaders(),
+      ...(options.headers || {}),
+    },
   });
 
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(`Sample product seed failed ${response.status}: ${detail}\nIf tables are missing, run supabase-schema.sql in Supabase SQL Editor first.`);
+    throw new Error(`Supabase request failed ${response.status}: ${detail}`);
   }
 
-  const inserted = await response.json();
-  console.log(`Inserted ${inserted.length} sample products into Supabase products.`);
+  if (response.status === 204) return null;
+  return response.json();
+}
+
+async function ensureShop() {
+  const query = new URLSearchParams({
+    select: "id",
+    slug: "eq.raj-fashion",
+    limit: "1",
+  });
+  const existing = await supabaseRequest(`shops?${query.toString()}`);
+  if (existing?.[0]?.id) return existing[0].id;
+
+  const rows = await supabaseRequest("shops", {
+    method: "POST",
+    body: JSON.stringify({
+      name: "Raj Fashion",
+      slug: "raj-fashion",
+      owner_name: "Raj Fashion Owner",
+      owner_whatsapp: null,
+      tone: "friendly, confident, local fashion salesman",
+    }),
+  });
+  return rows?.[0]?.id;
+}
+
+async function upsertProduct(shopId, product) {
+  const query = new URLSearchParams({
+    select: "id",
+    shop_id: `eq.${shopId}`,
+    name: `eq.${product.name}`,
+    limit: "1",
+  });
+  const existing = await supabaseRequest(`products?${query.toString()}`);
+  const body = JSON.stringify({ ...product, shop_id: shopId });
+
+  if (existing?.[0]?.id) {
+    const params = new URLSearchParams({ id: `eq.${existing[0].id}` });
+    await supabaseRequest(`products?${params.toString()}`, {
+      method: "PATCH",
+      body,
+    });
+    return "updated";
+  }
+
+  await supabaseRequest("products", {
+    method: "POST",
+    body,
+  });
+  return "inserted";
+}
+
+async function seed() {
+  const shopId = await ensureShop();
+  if (!shopId) {
+    throw new Error("Could not create or find Raj Fashion shop.");
+  }
+
+  const counts = { inserted: 0, updated: 0 };
+  for (const product of samples) {
+    const status = await upsertProduct(shopId, product);
+    counts[status] += 1;
+  }
+  console.log(`Seeded ${samples.length} local-image products for Raj Fashion (${counts.inserted} inserted, ${counts.updated} updated).`);
 }
 
 seed().catch((error) => {
-  console.error(error.message);
+  console.error(`${error.message}\nIf tables are missing, run supabase-schema.sql in Supabase SQL Editor first.`);
   process.exit(1);
 });
