@@ -29,6 +29,20 @@ test("rankProducts prefers budget and matching terms", () => {
   assert.equal(first.id, "b");
 });
 
+test("rankProducts avoids unrelated products for specific category requests", () => {
+  const products = [
+    { id: "shirt", name: "White Minimal Linen Shirt", category: "Shirts", price: 1199, stock: 8, colors: ["White"], sizes: ["M"], inquiries: 5 },
+    { id: "shoe", name: "White Street Sneakers", category: "Footwear", price: 1999, stock: 8, colors: ["White"], sizes: ["9"], inquiries: 50 },
+    { id: "jacket", name: "Blue Denim Jacket", category: "Jackets", price: 2499, stock: 8, colors: ["Blue"], sizes: ["L"], inquiries: 30 },
+  ];
+
+  assert.deepEqual(
+    rankProducts(products, "white shirt photo bhejo", 3).map((product) => product.id),
+    ["shirt"],
+  );
+  assert.deepEqual(rankProducts(products, "red kurta dikhao", 3), []);
+});
+
 test("extractBudget and detectInterest parse common Hinglish messages", () => {
   assert.equal(extractBudget("black shirt under 1500 dikhao"), 1500);
   assert.equal(detectInterest("ye chahiye available hai?"), true);

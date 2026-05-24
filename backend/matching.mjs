@@ -14,6 +14,36 @@ const CATEGORY_WORDS = {
   footwear: ["shoe", "shoes", "sneaker", "sneakers", "footwear"],
 };
 
+const GENERIC_TERMS = new Set([
+  "raj",
+  "fashion",
+  "product",
+  "products",
+  "catalog",
+  "catalogue",
+  "dikhao",
+  "dikhana",
+  "show",
+  "bhejo",
+  "photo",
+  "photos",
+  "image",
+  "images",
+  "hai",
+  "hain",
+  "kya",
+  "ke",
+  "ka",
+  "ki",
+  "se",
+  "me",
+  "mein",
+  "under",
+  "below",
+  "budget",
+  "size",
+]);
+
 export function slugify(value) {
   return String(value || "")
     .toLowerCase()
@@ -40,6 +70,24 @@ export function extractTerms(message) {
     .filter((term) => term.length > 1);
 }
 
+function searchableProductText(product) {
+  return [
+    product.name,
+    product.description,
+    product.category,
+    ...(Array.isArray(product.colors) ? product.colors : []),
+    ...(Array.isArray(product.sizes) ? product.sizes : []),
+  ]
+    .join(" ")
+    .toLowerCase();
+}
+
+function productMatchesCategory(product, categoryHints) {
+  if (!categoryHints.length) return true;
+  const text = searchableProductText(product);
+  return categoryHints.some((hint) => [hint, ...(CATEGORY_WORDS[hint] || [])].some((alias) => text.includes(alias)));
+}
+
 export function findShopByMessage(shops, message) {
   if (shops.length === 1) return shops[0];
 
@@ -53,32 +101,32 @@ export function findShopByMessage(shops, message) {
 
 export function rankProducts(products, message, limit = 3) {
   const terms = extractTerms(message);
+  const specificTerms = terms.filter((term) => !GENERIC_TERMS.has(term));
   const budget = extractBudget(message);
   const categoryHints = Object.entries(CATEGORY_WORDS)
     .filter(([, aliases]) => aliases.some((alias) => terms.includes(alias)))
     .map(([category]) => category);
+  const hasSpecificSignal = specificTerms.length > 0 || categoryHints.length > 0 || budget > 0;
 
   return products
+    .filter((product) => productMatchesCategory(product, categoryHints))
     .map((product) => {
-      const text = [
-        product.name,
-        product.description,
-        product.category,
-        ...(Array.isArray(product.colors) ? product.colors : []),
-        ...(Array.isArray(product.sizes) ? product.sizes : []),
-      ]
-        .join(" ")
-        .toLowerCase();
-      const keywordScore = terms.reduce((score, term) => score + (text.includes(term) ? 10 : 0), 0);
+      const text = searchableProductText(product);
+      const nameSlug = slugify(product.name);
+      const messageSlug = slugify(message);
+      const exactNameScore = messageSlug.includes(nameSlug) || nameSlug.includes(messageSlug) ? 60 : 0;
+      const keywordScore = specificTerms.reduce((score, term) => score + (text.includes(term) ? 14 : 0), 0);
       const categoryScore = categoryHints.some((hint) => text.includes(hint)) ? 18 : 0;
       const budgetScore = budget && Number(product.price) <= budget ? 18 : 0;
-      const demandScore = Math.min(Number(product.inquiries || 0), 25);
+      const demandScore = hasSpecificSignal ? Math.min(Number(product.inquiries || 0), 8) : Math.min(Number(product.inquiries || 0), 25);
       const stockScore = Number(product.stock || 0) > 0 ? 10 : -100;
       return {
         product,
-        score: keywordScore + categoryScore + budgetScore + demandScore + stockScore,
+        matchScore: exactNameScore + keywordScore + categoryScore + budgetScore,
+        score: exactNameScore + keywordScore + categoryScore + budgetScore + demandScore + stockScore,
       };
     })
+    .filter(({ matchScore }) => !hasSpecificSignal || matchScore > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map(({ product }) => product);
