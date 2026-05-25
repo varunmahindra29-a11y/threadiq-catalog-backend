@@ -38,7 +38,7 @@ export function readConfig() {
     port: Number(process.env.PORT || 8787),
   };
 
-  const missing = [
+  config.missingEnv = [
     ["SUPABASE_URL", config.supabaseUrl],
     ["SUPABASE_SERVICE_ROLE_KEY", config.supabaseServiceRoleKey],
     ["WHATSAPP_PHONE_NUMBER_ID", config.whatsappPhoneNumberId],
@@ -48,10 +48,6 @@ export function readConfig() {
   ]
     .filter(([, value]) => !value)
     .map(([key]) => key);
-
-  if (missing.length) {
-    throw new Error(`Missing backend environment variables: ${missing.join(", ")}`);
-  }
 
   return config;
 }

@@ -27,6 +27,16 @@ const defaultShopName = "EstateIQ Demo Realty";
 app.use(express.json({ limit: "8mb" }));
 app.use(express.static(root));
 
+function requireBackendConfig(response) {
+  if (!config.missingEnv?.length) return true;
+  response.status(503).json({
+    ok: false,
+    error: "missing_backend_environment",
+    missing: config.missingEnv,
+  });
+  return false;
+}
+
 function safeImageName(fileName = "property-image") {
   const extension = extname(fileName).toLowerCase();
   const allowed = new Set([".jpg", ".jpeg", ".png", ".webp"]);
@@ -128,6 +138,8 @@ app.get("/health", (request, response) => {
     app: "EstateIQ",
     provider: "gemini",
     model: config.geminiModel,
+    configured: !config.missingEnv?.length,
+    missing: config.missingEnv || [],
   });
 });
 
@@ -146,6 +158,7 @@ app.post("/api/property-images", async (request, response) => {
 
 app.get("/api/properties", async (request, response) => {
   try {
+    if (!requireBackendConfig(response)) return;
     const shopId = await ensureDefaultShop();
     const params = new URLSearchParams({
       select: "*",
@@ -161,6 +174,7 @@ app.get("/api/properties", async (request, response) => {
 
 app.post("/api/properties", async (request, response) => {
   try {
+    if (!requireBackendConfig(response)) return;
     const shopId = await ensureDefaultShop();
     const property = normalizePropertyPayload(request.body || {}, shopId);
     if (!property.title || !property.price || !property.locality) {
@@ -179,6 +193,7 @@ app.post("/api/properties", async (request, response) => {
 
 app.patch("/api/properties", async (request, response) => {
   try {
+    if (!requireBackendConfig(response)) return;
     const propertyId = request.query.id;
     if (!propertyId) {
       response.status(400).json({ ok: false, error: "missing_property_id" });
@@ -206,6 +221,7 @@ app.patch("/api/properties", async (request, response) => {
 
 app.delete("/api/properties", async (request, response) => {
   try {
+    if (!requireBackendConfig(response)) return;
     const propertyId = request.query.id;
     if (!propertyId) {
       response.status(400).json({ ok: false, error: "missing_property_id" });
@@ -228,6 +244,7 @@ app.delete("/api/properties", async (request, response) => {
 
 app.get("/api/leads", async (request, response) => {
   try {
+    if (!requireBackendConfig(response)) return;
     const shopId = await ensureDefaultShop();
     const leadParams = new URLSearchParams({
       select: "*",
@@ -252,6 +269,7 @@ app.get("/api/leads", async (request, response) => {
 });
 
 app.get("/health/deep", async (request, response) => {
+  if (!requireBackendConfig(response)) return;
   try {
     const shops = await listShops(config);
     response.json({
@@ -301,6 +319,7 @@ app.get("/debug/events", requireDebugToken, (request, response) => {
 });
 
 app.post("/debug/whatsapp/send-test", requireDebugToken, async (request, response) => {
+  if (!requireBackendConfig(response)) return;
   const to = request.body?.to;
   const message = request.body?.message || "EstateIQ WhatsApp test message.";
   if (!to) {
@@ -321,6 +340,7 @@ app.post("/debug/whatsapp/send-test", requireDebugToken, async (request, respons
 });
 
 app.post("/debug/whatsapp/send-test-image", requireDebugToken, async (request, response) => {
+  if (!requireBackendConfig(response)) return;
   const to = request.body?.to;
   const imageUrl = request.body?.image_url || firstFallbackImageUrl(config);
   const caption = request.body?.caption || "EstateIQ property photo test.";
@@ -347,6 +367,7 @@ app.post("/debug/whatsapp/send-test-image", requireDebugToken, async (request, r
 });
 
 app.post("/debug/webhook/simulate", requireDebugToken, async (request, response) => {
+  if (!requireBackendConfig(response)) return;
   const from = request.body?.from;
   const text = request.body?.text || "2BHK furnished flat rent in Andheri under 50k";
   if (!from) {
@@ -400,6 +421,7 @@ function verifyWhatsappWebhook(request, response) {
 }
 
 async function receiveWhatsappWebhook(request, response) {
+  if (!requireBackendConfig(response)) return;
   try {
     const messages = [];
     const statuses = [];
