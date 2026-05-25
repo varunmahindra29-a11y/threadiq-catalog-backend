@@ -45,24 +45,32 @@ async function generateContent(config, body) {
   throw new Error(`Gemini request failed for all models: ${errors.join(" | ")}`);
 }
 
-function formatPrice(property) {
-  const price = Number(property.price || 0).toLocaleString("en-IN");
-  return property.listing_type === "rent" ? `Rs ${price}/month` : `Rs ${price}`;
-}
-
-export function fallbackCaption(shop, property) {
-  const bhk = Number(property.bhk || 0) > 0 ? `${property.bhk}BHK` : property.property_type || "Property";
-  const amenities = Array.isArray(property.amenities) && property.amenities.length ? property.amenities.slice(0, 3).join(", ") : "key amenities";
-  return [
-    `${property.title || property.name}`,
-    `${bhk} in ${property.locality || property.city || "prime location"}`,
-    `Price: ${formatPrice(property)}`,
-    `Area: ${Number(property.area_sqft || 0).toLocaleString("en-IN")} sq ft`,
-    `Furnishing: ${property.furnishing || "confirm kar denge"}`,
-    `Available: ${property.availability || property.possession || "on request"}`,
-    `Highlights: ${amenities}`,
-    `${shop.name} se ye option match kar raha hai. Interested ho to callback/site visit ka time bata do.`,
+export async function generateShortBrokerReply(config, { shop, customerMessage, purpose, properties = [] }) {
+  const prompt = [
+    "You are EstateIQ, a friendly Hinglish AI real estate broker assistant on WhatsApp.",
+    `Broker/agency name: ${shop?.name || "EstateIQ"}`,
+    `Purpose: ${purpose}`,
+    "Write one short natural WhatsApp message.",
+    "Do not sound like a template. Do not mention that you are using a prompt.",
+    "Use only provided property facts. Never invent price, availability, amenities, brokerage, discounts, or promises.",
+    "If a lead is interested, ask for preferred callback or site visit time.",
+    `Customer message: ${customerMessage}`,
+    `Properties: ${JSON.stringify(properties.map(compactProperty))}`,
   ].join("\n");
+
+  const { text } = await generateContent(config, {
+    contents: [
+      {
+        role: "user",
+        parts: [{ text: prompt }],
+      },
+    ],
+    generationConfig: {
+      temperature: 0.65,
+    },
+  });
+
+  return text || "Aap apni locality, budget, rent/sale aur visit timing bata do, main matching properties shortlist kar dunga.";
 }
 
 export async function generatePropertyCaptions(config, { shop, properties, customerMessage }) {
@@ -91,12 +99,19 @@ export async function generatePropertyCaptions(config, { shop, properties, custo
   });
   const parsed = JSON.parse(text);
   const captions = Array.isArray(parsed.captions) ? parsed.captions : [];
+  const missingCaption = properties.some((property) => {
+    const match = captions.find((caption) => caption.property_id === property.id);
+    return !match?.caption;
+  });
+  if (missingCaption) {
+    throw new Error("Gemini response did not include every property caption.");
+  }
 
   return properties.map((property) => {
     const match = captions.find((caption) => caption.property_id === property.id);
     return {
       property,
-      caption: match?.caption || fallbackCaption(shop, property),
+      caption: match?.caption || "",
     };
   });
 }

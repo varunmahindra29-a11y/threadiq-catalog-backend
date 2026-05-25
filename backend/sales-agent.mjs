@@ -1,5 +1,5 @@
 import { fallbackProperties, fallbackShop } from "./fallback-properties.mjs";
-import { fallbackCaption, generateFallbackChatReply, generatePropertyCaptions } from "./gemini.mjs";
+import { generateFallbackChatReply, generatePropertyCaptions, generateShortBrokerReply } from "./gemini.mjs";
 import { detectInterest, findShopByMessage, rankProperties } from "./matching.mjs";
 import { createLead, listPropertiesForShop, listShops, logWhatsappMessage } from "./supabase.mjs";
 import { sendImage, sendText } from "./whatsapp.mjs";
@@ -60,7 +60,7 @@ async function sendFallbackChat(config, message, reason) {
     reply = await generateFallbackChatReply(config, message.text);
   } catch (error) {
     console.error(`Gemini fallback chat failed: ${error.message}`);
-    reply = `Samjha bhai: "${message.text}". Locality, budget, rent/sale, BHK aur move-in timing bata do, main matching properties shortlist kar dunga.`;
+    reply = "EstateIQ AI abhi temporarily unavailable hai. Thodi der baad requirement dobara bhej dena.";
   }
 
   await sendText(config, message.from, reply);
@@ -142,13 +142,32 @@ export async function handleCustomerMessage(config, message) {
     });
   } catch (error) {
     console.warn(`Gemini property caption fallback: ${error.message}`);
-    captions = matchedProperties.map((property) => ({
-      property,
-      caption: fallbackCaption(shop, property),
-    }));
+    const reply = await generateFallbackChatReply(config, `${message.text}\nProperty caption generation failed. Ask for locality, budget, BHK, rent/sale, and visit timing without claiming matches.`);
+    await sendText(config, message.from, reply);
+    await logWhatsappMessage(config, {
+      customerWhatsapp: message.from,
+      direction: "outbound",
+      body: reply,
+      shopId: shop.id,
+      rawPayload: null,
+    });
+    return { status: "ai_caption_failed", shopId: shop.id };
   }
 
-  await sendText(config, message.from, `${shop.name} se top property options bhej raha hoon. Jo pasand aaye uska callback ya site visit time bata dena.`);
+  const introReply = await generateShortBrokerReply(config, {
+    shop,
+    customerMessage: message.text,
+    purpose: "Tell the customer that matching property options are being shared now and ask them to pick one for callback or site visit.",
+    properties: matchedProperties,
+  });
+  await sendText(config, message.from, introReply);
+  await logWhatsappMessage(config, {
+    customerWhatsapp: message.from,
+    direction: "outbound",
+    body: introReply,
+    shopId: shop.id,
+    rawPayload: { type: "ai_intro" },
+  });
   for (const item of captions) {
     const publicImageUrl = publicPropertyImageUrl(config, item.property.image_url);
     const captionWithLink = item.property.image_url ? `${item.caption}\n\nImage: ${publicImageUrl || item.property.image_url}` : item.caption;
@@ -187,7 +206,20 @@ export async function handleCustomerMessage(config, message) {
     } catch (error) {
       console.warn(`Skipping lead capture: ${error.message}`);
     }
-    await sendText(config, message.from, "Done bhai, maine broker ko lead bhej di hai. Aap callback ya site visit ke liye preferred time bata do.");
+    const handoffReply = await generateShortBrokerReply(config, {
+      shop,
+      customerMessage: message.text,
+      purpose: "Confirm the lead has been shared with the broker and ask for preferred callback or site visit time.",
+      properties: matchedProperties,
+    });
+    await sendText(config, message.from, handoffReply);
+    await logWhatsappMessage(config, {
+      customerWhatsapp: message.from,
+      direction: "outbound",
+      body: handoffReply,
+      shopId: shop.id,
+      rawPayload: { type: "ai_lead_handoff" },
+    });
   }
 
   return {
@@ -206,7 +238,7 @@ export async function handleWhatsappPayload(config, payload) {
     } catch (error) {
       console.error(`Message handling failed: ${error.message}`);
       try {
-        await sendText(config, message.from, "Bhai bot me temporary issue aa gaya. Requirement dobara bhejo ya broker se direct connect karwa denge.");
+        await sendText(config, message.from, "EstateIQ AI temporarily unavailable hai. Requirement thodi der baad dobara bhej dena.");
       } catch (sendError) {
         console.error(`Fallback WhatsApp send failed: ${sendError.message}`);
       }
