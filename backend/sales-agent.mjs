@@ -1,7 +1,7 @@
-import { fallbackProducts, fallbackShop } from "./fallback-products.mjs";
-import { generateFallbackChatReply, generateSalesCaptions, fallbackCaption } from "./gemini.mjs";
-import { detectInterest, findShopByMessage, rankProducts } from "./matching.mjs";
-import { createLead, listProductsForShop, listShops, logWhatsappMessage } from "./supabase.mjs";
+import { fallbackProperties, fallbackShop } from "./fallback-properties.mjs";
+import { fallbackCaption, generateFallbackChatReply, generatePropertyCaptions } from "./gemini.mjs";
+import { detectInterest, findShopByMessage, rankProperties } from "./matching.mjs";
+import { createLead, listPropertiesForShop, listShops, logWhatsappMessage } from "./supabase.mjs";
 import { sendImage, sendText } from "./whatsapp.mjs";
 
 function getTextMessages(payload) {
@@ -22,24 +22,32 @@ function getTextMessages(payload) {
   return messages;
 }
 
-function ownerAlert(shop, customerWhatsapp, customerMessage, products) {
-  const productLines = products.map((product) => `- ${product.name} (₹${Number(product.price || 0).toLocaleString("en-IN")})`).join("\n");
+function priceLine(property) {
+  const price = Number(property.price || 0).toLocaleString("en-IN");
+  return property.listing_type === "rent" ? `Rs ${price}/month` : `Rs ${price}`;
+}
+
+function ownerAlert(shop, customerWhatsapp, customerMessage, properties) {
+  const propertyLines = properties
+    .map((property) => `- ${property.title || property.name} (${property.locality || property.city}, ${priceLine(property)})`)
+    .join("\n");
   return [
-    `New WhatsApp lead for ${shop.name}`,
+    `New EstateIQ lead for ${shop.name}`,
     `Customer: +${customerWhatsapp}`,
-    `Message: ${customerMessage}`,
-    "Matched products:",
-    productLines || "- No matched products",
+    `Requirement: ${customerMessage}`,
+    "Matched properties:",
+    propertyLines || "- No matched properties",
+    "Next step: call back or schedule a site visit.",
   ].join("\n");
 }
 
-function wantsCatalog(messageText) {
-  return /\b(raj fashion|product|products|dikhao|show|kurta|shirt|tshirt|t-shirt|jeans|jacket|trouser|pant|sneaker|shoe|under|budget|size|xl|large|medium)\b/i.test(
+function wantsProperties(messageText) {
+  return /\b(estateiq|realty|property|properties|flat|apartment|ghar|house|villa|studio|plot|rent|rental|sale|buy|purchase|bhk|bedroom|furnished|unfurnished|locality|andheri|powai|noida|gurgaon|gurugram|bandra|whitefield|budget|under|visit|call|broker)\b/i.test(
     messageText,
   );
 }
 
-function publicProductImageUrl(config, imageUrl) {
+function publicPropertyImageUrl(config, imageUrl) {
   if (!imageUrl) return "";
   if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
   if (!config.publicBaseUrl) return "";
@@ -52,7 +60,7 @@ async function sendFallbackChat(config, message, reason) {
     reply = await generateFallbackChatReply(config, message.text);
   } catch (error) {
     console.error(`Gemini fallback chat failed: ${error.message}`);
-    reply = `Samjha bhai: "${message.text}". Main AI chat mode me hoon. Catalog connection fix hote hi products/images bhi bhej dunga, abhi aap style, budget, size ya occasion batao.`;
+    reply = `Samjha bhai: "${message.text}". Locality, budget, rent/sale, BHK aur move-in timing bata do, main matching properties shortlist kar dunga.`;
   }
 
   await sendText(config, message.from, reply);
@@ -60,7 +68,7 @@ async function sendFallbackChat(config, message, reason) {
 }
 
 export async function handleCustomerMessage(config, message) {
-  if (!wantsCatalog(message.text)) {
+  if (!wantsProperties(message.text)) {
     return sendFallbackChat(config, message, "ai_chat_mode");
   }
 
@@ -68,7 +76,7 @@ export async function handleCustomerMessage(config, message) {
   try {
     shops = await listShops(config);
   } catch (error) {
-    console.error(`Supabase shops lookup failed: ${error.message}`);
+    console.error(`Supabase broker lookup failed: ${error.message}`);
     shops = [fallbackShop()];
   }
 
@@ -87,7 +95,7 @@ export async function handleCustomerMessage(config, message) {
   });
 
   if (!shop) {
-    const reply = await generateFallbackChatReply(config, `${message.text}\nAlso ask which shop they want, example Raj Fashion.`);
+    const reply = await generateFallbackChatReply(config, `${message.text}\nAlso ask which broker or agency they want, example EstateIQ Demo Realty.`);
     await sendText(config, message.from, reply);
     await logWhatsappMessage(config, {
       customerWhatsapp: message.from,
@@ -95,25 +103,25 @@ export async function handleCustomerMessage(config, message) {
       body: reply,
       rawPayload: null,
     });
-    return { status: "shop_not_found" };
+    return { status: "broker_not_found" };
   }
 
-  let products;
+  let properties;
   try {
-    products = await listProductsForShop(config, shop.id);
+    properties = await listPropertiesForShop(config, shop.id);
   } catch (error) {
-    console.error(`Supabase products lookup failed: ${error.message}`);
-    products = fallbackProducts(config, shop.id);
+    console.error(`Supabase properties lookup failed: ${error.message}`);
+    properties = fallbackProperties(config, shop.id);
   }
 
-  if (!products.length) {
-    products = fallbackProducts(config, shop.id);
+  if (!properties.length) {
+    properties = fallbackProperties(config, shop.id);
   }
 
-  const matchedProducts = rankProducts(products, message.text, 3);
+  const matchedProperties = rankProperties(properties, message.text, 3);
 
-  if (!matchedProducts.length) {
-    const reply = await generateFallbackChatReply(config, `${message.text}\nNo matching in-stock products found for ${shop.name}. Ask a helpful follow-up.`);
+  if (!matchedProperties.length) {
+    const reply = await generateFallbackChatReply(config, `${message.text}\nNo matching active properties found for ${shop.name}. Ask for locality, budget, BHK, rent/sale, and timing.`);
     await sendText(config, message.from, reply);
     await logWhatsappMessage(config, {
       customerWhatsapp: message.from,
@@ -122,28 +130,28 @@ export async function handleCustomerMessage(config, message) {
       shopId: shop.id,
       rawPayload: null,
     });
-    return { status: "no_products", shopId: shop.id };
+    return { status: "no_properties", shopId: shop.id };
   }
 
   let captions;
   try {
-    captions = await generateSalesCaptions(config, {
+    captions = await generatePropertyCaptions(config, {
       shop,
-      products: matchedProducts,
+      properties: matchedProperties,
       customerMessage: message.text,
     });
   } catch (error) {
-    console.warn(`Gemini caption fallback: ${error.message}`);
-    captions = matchedProducts.map((product) => ({
-      product,
-      caption: fallbackCaption(shop, product),
+    console.warn(`Gemini property caption fallback: ${error.message}`);
+    captions = matchedProperties.map((property) => ({
+      property,
+      caption: fallbackCaption(shop, property),
     }));
   }
 
-  await sendText(config, message.from, `${shop.name} se top options bhej raha hoon. Jo pasand aaye uska size bol dena.`);
+  await sendText(config, message.from, `${shop.name} se top property options bhej raha hoon. Jo pasand aaye uska callback ya site visit time bata dena.`);
   for (const item of captions) {
-    const publicImageUrl = publicProductImageUrl(config, item.product.image_url);
-    const captionWithLink = item.product.image_url ? `${item.caption}\n\nImage: ${publicImageUrl || item.product.image_url}` : item.caption;
+    const publicImageUrl = publicPropertyImageUrl(config, item.property.image_url);
+    const captionWithLink = item.property.image_url ? `${item.caption}\n\nImage: ${publicImageUrl || item.property.image_url}` : item.caption;
     try {
       if (publicImageUrl) {
         await sendImage(config, message.from, publicImageUrl, item.caption);
@@ -151,7 +159,7 @@ export async function handleCustomerMessage(config, message) {
         await sendText(config, message.from, captionWithLink);
       }
     } catch (error) {
-      console.error(`Product image send failed: ${error.message}`);
+      console.error(`Property image send failed: ${error.message}`);
       await sendText(config, message.from, captionWithLink);
     }
     await logWhatsappMessage(config, {
@@ -159,7 +167,7 @@ export async function handleCustomerMessage(config, message) {
       direction: "outbound",
       body: captionWithLink,
       shopId: shop.id,
-      rawPayload: { product_id: item.product.id },
+      rawPayload: { property_id: item.property.id },
     });
   }
 
@@ -169,22 +177,23 @@ export async function handleCustomerMessage(config, message) {
         shopId: shop.id,
         customerWhatsapp: message.from,
         customerMessage: message.text,
-        matchedProductIds: matchedProducts.map((product) => product.id),
+        matchedPropertyIds: matchedProperties.map((property) => property.id),
+        intent: "site_visit",
       });
 
       if (shop.owner_whatsapp) {
-        await sendText(config, shop.owner_whatsapp, ownerAlert(shop, message.from, message.text, matchedProducts));
+        await sendText(config, shop.owner_whatsapp, ownerAlert(shop, message.from, message.text, matchedProperties));
       }
     } catch (error) {
       console.warn(`Skipping lead capture: ${error.message}`);
     }
-    await sendText(config, message.from, "Done bhai, maine shop owner ko lead bhej di hai. Aap size/color confirm kar do to process fast ho jayega.");
+    await sendText(config, message.from, "Done bhai, maine broker ko lead bhej di hai. Aap callback ya site visit ke liye preferred time bata do.");
   }
 
   return {
-    status: "sent_products",
+    status: "sent_properties",
     shopId: shop.id,
-    productIds: matchedProducts.map((product) => product.id),
+    propertyIds: matchedProperties.map((property) => property.id),
   };
 }
 
@@ -197,7 +206,7 @@ export async function handleWhatsappPayload(config, payload) {
     } catch (error) {
       console.error(`Message handling failed: ${error.message}`);
       try {
-        await sendText(config, message.from, "Bhai bot me temporary issue aa gaya. Aap message dobara bhejo ya shop owner se direct connect karwa denge.");
+        await sendText(config, message.from, "Bhai bot me temporary issue aa gaya. Requirement dobara bhejo ya broker se direct connect karwa denge.");
       } catch (sendError) {
         console.error(`Fallback WhatsApp send failed: ${sendError.message}`);
       }

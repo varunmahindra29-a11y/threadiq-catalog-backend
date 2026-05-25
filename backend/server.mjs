@@ -5,7 +5,7 @@ import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getRecentEvents, recordEvent } from "./debug-events.mjs";
 import { readConfig } from "./env.mjs";
-import { firstFallbackImageUrl } from "./fallback-products.mjs";
+import { firstFallbackImageUrl } from "./fallback-properties.mjs";
 import { handleWhatsappPayload } from "./sales-agent.mjs";
 import { listShops } from "./supabase.mjs";
 import { sendImage, sendText } from "./whatsapp.mjs";
@@ -20,23 +20,24 @@ try {
 
 const app = express();
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const productImagesDir = join(root, "product-images");
-const defaultShopSlug = "raj-fashion";
-const defaultShopName = "Raj Fashion";
+const propertyImagesDir = join(root, "property-images");
+const defaultShopSlug = "estateiq-demo-realty";
+const defaultShopName = "EstateIQ Demo Realty";
 
 app.use(express.json({ limit: "8mb" }));
 app.use(express.static(root));
 
-function safeImageName(fileName = "product-image") {
+function safeImageName(fileName = "property-image") {
   const extension = extname(fileName).toLowerCase();
   const allowed = new Set([".jpg", ".jpeg", ".png", ".webp"]);
   const safeExtension = allowed.has(extension) ? extension : ".jpg";
-  const base = fileName
-    .replace(/\.[^.]+$/, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48) || "product-image";
+  const base =
+    fileName
+      .replace(/\.[^.]+$/, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 48) || "property-image";
   return `${base}-${Date.now()}${safeExtension}`;
 }
 
@@ -81,27 +82,34 @@ async function ensureDefaultShop() {
     body: JSON.stringify({
       name: defaultShopName,
       slug: defaultShopSlug,
-      owner_name: `${defaultShopName} Owner`,
-      tone: "friendly, confident, local fashion salesman",
+      owner_name: "EstateIQ Broker",
+      tone: "friendly, practical, trusted real estate broker",
     }),
   });
   return rows?.[0]?.id || "";
 }
 
-function normalizeProductPayload(body, shopId) {
+function normalizePropertyPayload(body, shopId) {
   return {
     shop_id: shopId,
-    name: String(body.name || "").trim(),
+    title: String(body.title || body.name || "").trim(),
     description: String(body.description || "").trim(),
-    category: String(body.category || "").trim() || "General",
+    listing_type: ["rent", "sale"].includes(String(body.listing_type || "").toLowerCase())
+      ? String(body.listing_type).toLowerCase()
+      : "rent",
+    property_type: String(body.property_type || "Apartment").trim(),
+    locality: String(body.locality || "").trim(),
+    city: String(body.city || "").trim(),
     price: Number(body.price || 0),
-    stock: Number(body.stock || 0),
-    sizes: Array.isArray(body.sizes) ? body.sizes : [],
-    colors: Array.isArray(body.colors) ? body.colors : [],
+    bhk: Number(body.bhk || 0),
+    area_sqft: Number(body.area_sqft || 0),
+    furnishing: String(body.furnishing || "").trim(),
+    availability: String(body.availability || body.possession || "").trim(),
+    amenities: Array.isArray(body.amenities) ? body.amenities : [],
     image_url: body.image_url || "",
     status: body.status || "active",
     inquiries: Number(body.inquiries || 0),
-    orders: Number(body.orders || 0),
+    visits: Number(body.visits || 0),
   };
 }
 
@@ -117,12 +125,13 @@ function requireDebugToken(request, response, next) {
 app.get("/health", (request, response) => {
   response.json({
     ok: true,
+    app: "EstateIQ",
     provider: "gemini",
     model: config.geminiModel,
   });
 });
 
-app.post("/api/product-images", async (request, response) => {
+app.post("/api/property-images", async (request, response) => {
   const match = String(request.body?.dataUrl || "").match(/^data:image\/(?:jpeg|jpg|png|webp);base64,(.+)$/);
   if (!match) {
     response.status(400).json({ ok: false, error: "invalid_image" });
@@ -130,12 +139,12 @@ app.post("/api/product-images", async (request, response) => {
   }
 
   const fileName = safeImageName(request.body?.fileName);
-  await mkdir(productImagesDir, { recursive: true });
-  await writeFile(join(productImagesDir, fileName), Buffer.from(match[1], "base64"));
-  response.json({ ok: true, image_url: `/product-images/${fileName}` });
+  await mkdir(propertyImagesDir, { recursive: true });
+  await writeFile(join(propertyImagesDir, fileName), Buffer.from(match[1], "base64"));
+  response.json({ ok: true, image_url: `/property-images/${fileName}` });
 });
 
-app.get("/api/products", async (request, response) => {
+app.get("/api/properties", async (request, response) => {
   try {
     const shopId = await ensureDefaultShop();
     const params = new URLSearchParams({
@@ -143,77 +152,77 @@ app.get("/api/products", async (request, response) => {
       shop_id: `eq.${shopId}`,
       order: "created_at.desc",
     });
-    const products = await supabaseRequest(`products?${params.toString()}`);
-    response.json({ ok: true, shop_id: shopId, products });
+    const properties = await supabaseRequest(`properties?${params.toString()}`);
+    response.json({ ok: true, shop_id: shopId, properties });
   } catch (error) {
-    response.status(500).json({ ok: false, error: "products_fetch_failed", detail: error.message.slice(0, 240) });
+    response.status(500).json({ ok: false, error: "properties_fetch_failed", detail: error.message.slice(0, 240) });
   }
 });
 
-app.post("/api/products", async (request, response) => {
+app.post("/api/properties", async (request, response) => {
   try {
     const shopId = await ensureDefaultShop();
-    const product = normalizeProductPayload(request.body || {}, shopId);
-    if (!product.name || !product.price) {
-      response.status(400).json({ ok: false, error: "missing_product_fields" });
+    const property = normalizePropertyPayload(request.body || {}, shopId);
+    if (!property.title || !property.price || !property.locality) {
+      response.status(400).json({ ok: false, error: "missing_property_fields" });
       return;
     }
-    const rows = await supabaseRequest("products", {
+    const rows = await supabaseRequest("properties", {
       method: "POST",
-      body: JSON.stringify(product),
+      body: JSON.stringify(property),
     });
-    response.json({ ok: true, shop_id: shopId, product: rows?.[0] || product });
+    response.json({ ok: true, shop_id: shopId, property: rows?.[0] || property });
   } catch (error) {
-    response.status(500).json({ ok: false, error: "product_insert_failed", detail: error.message.slice(0, 240) });
+    response.status(500).json({ ok: false, error: "property_insert_failed", detail: error.message.slice(0, 240) });
   }
 });
 
-app.patch("/api/products", async (request, response) => {
+app.patch("/api/properties", async (request, response) => {
   try {
-    const productId = request.query.id;
-    if (!productId) {
-      response.status(400).json({ ok: false, error: "missing_product_id" });
+    const propertyId = request.query.id;
+    if (!propertyId) {
+      response.status(400).json({ ok: false, error: "missing_property_id" });
       return;
     }
     const shopId = await ensureDefaultShop();
-    const product = normalizeProductPayload(request.body || {}, shopId);
-    if (!product.name || !product.price) {
-      response.status(400).json({ ok: false, error: "missing_product_fields" });
+    const property = normalizePropertyPayload(request.body || {}, shopId);
+    if (!property.title || !property.price || !property.locality) {
+      response.status(400).json({ ok: false, error: "missing_property_fields" });
       return;
     }
     const params = new URLSearchParams({
-      id: `eq.${productId}`,
+      id: `eq.${propertyId}`,
       shop_id: `eq.${shopId}`,
     });
-    const rows = await supabaseRequest(`products?${params.toString()}`, {
+    const rows = await supabaseRequest(`properties?${params.toString()}`, {
       method: "PATCH",
-      body: JSON.stringify(product),
+      body: JSON.stringify(property),
     });
-    response.json({ ok: true, shop_id: shopId, product: rows?.[0] || { ...product, id: productId } });
+    response.json({ ok: true, shop_id: shopId, property: rows?.[0] || { ...property, id: propertyId } });
   } catch (error) {
-    response.status(500).json({ ok: false, error: "product_update_failed", detail: error.message.slice(0, 240) });
+    response.status(500).json({ ok: false, error: "property_update_failed", detail: error.message.slice(0, 240) });
   }
 });
 
-app.delete("/api/products", async (request, response) => {
+app.delete("/api/properties", async (request, response) => {
   try {
-    const productId = request.query.id;
-    if (!productId) {
-      response.status(400).json({ ok: false, error: "missing_product_id" });
+    const propertyId = request.query.id;
+    if (!propertyId) {
+      response.status(400).json({ ok: false, error: "missing_property_id" });
       return;
     }
     const shopId = await ensureDefaultShop();
     const params = new URLSearchParams({
-      id: `eq.${productId}`,
+      id: `eq.${propertyId}`,
       shop_id: `eq.${shopId}`,
     });
-    await supabaseRequest(`products?${params.toString()}`, {
+    await supabaseRequest(`properties?${params.toString()}`, {
       method: "DELETE",
       prefer: "return=minimal",
     });
-    response.json({ ok: true, product_id: productId });
+    response.json({ ok: true, property_id: propertyId });
   } catch (error) {
-    response.status(500).json({ ok: false, error: "product_delete_failed", detail: error.message.slice(0, 240) });
+    response.status(500).json({ ok: false, error: "property_delete_failed", detail: error.message.slice(0, 240) });
   }
 });
 
@@ -247,6 +256,7 @@ app.get("/health/deep", async (request, response) => {
     const shops = await listShops(config);
     response.json({
       ok: true,
+      app: "EstateIQ",
       provider: "gemini",
       model: config.geminiModel,
       supabase: {
@@ -257,6 +267,7 @@ app.get("/health/deep", async (request, response) => {
   } catch (error) {
     response.status(500).json({
       ok: false,
+      app: "EstateIQ",
       provider: "gemini",
       model: config.geminiModel,
       supabase: {
@@ -291,7 +302,7 @@ app.get("/debug/events", requireDebugToken, (request, response) => {
 
 app.post("/debug/whatsapp/send-test", requireDebugToken, async (request, response) => {
   const to = request.body?.to;
-  const message = request.body?.message || "ThreadIQ WhatsApp test message.";
+  const message = request.body?.message || "EstateIQ WhatsApp test message.";
   if (!to) {
     response.status(400).json({ ok: false, error: "missing_to" });
     return;
@@ -312,7 +323,7 @@ app.post("/debug/whatsapp/send-test", requireDebugToken, async (request, respons
 app.post("/debug/whatsapp/send-test-image", requireDebugToken, async (request, response) => {
   const to = request.body?.to;
   const imageUrl = request.body?.image_url || firstFallbackImageUrl(config);
-  const caption = request.body?.caption || "ThreadIQ product photo test.";
+  const caption = request.body?.caption || "EstateIQ property photo test.";
   if (!to) {
     response.status(400).json({ ok: false, error: "missing_to" });
     return;
@@ -337,7 +348,7 @@ app.post("/debug/whatsapp/send-test-image", requireDebugToken, async (request, r
 
 app.post("/debug/webhook/simulate", requireDebugToken, async (request, response) => {
   const from = request.body?.from;
-  const text = request.body?.text || "Raj Fashion ke products dikhao";
+  const text = request.body?.text || "2BHK furnished flat rent in Andheri under 50k";
   if (!from) {
     response.status(400).json({ ok: false, error: "missing_from" });
     return;
@@ -448,5 +459,5 @@ app.get("*", (request, response) => {
 });
 
 app.listen(config.port, config.host, () => {
-  console.log(`ThreadIQ WhatsApp AI backend running at http://${config.host}:${config.port}`);
+  console.log(`EstateIQ WhatsApp AI backend running at http://${config.host}:${config.port}`);
 });

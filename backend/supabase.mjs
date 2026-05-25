@@ -36,15 +36,14 @@ export async function listShops(config) {
   return request(config, "shops?select=*&order=name.asc");
 }
 
-export async function listProductsForShop(config, shopId) {
+export async function listPropertiesForShop(config, shopId) {
   const params = new URLSearchParams({
     select: "*",
     shop_id: `eq.${shopId}`,
     status: "eq.active",
-    stock: "gt.0",
     order: "inquiries.desc,created_at.desc",
   });
-  return request(config, `products?${params.toString()}`);
+  return request(config, `properties?${params.toString()}`);
 }
 
 export async function createLead(config, lead) {
@@ -54,7 +53,8 @@ export async function createLead(config, lead) {
       shop_id: lead.shopId,
       customer_whatsapp: lead.customerWhatsapp,
       customer_message: lead.customerMessage,
-      matched_product_ids: lead.matchedProductIds,
+      matched_property_ids: lead.matchedPropertyIds,
+      intent: lead.intent || "site_visit",
       status: lead.status || "new",
     }),
   });

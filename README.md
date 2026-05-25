@@ -1,22 +1,22 @@
-# ThreadIQ Retail Console
+# EstateIQ Broker Console
 
-Clean web dashboard for clothing shop owners to list inventory, track WhatsApp AI demand, and preview product recommendations.
+EstateIQ is a WhatsApp AI dashboard for real estate brokers. Brokers can publish rent and sale properties, track buyer or tenant requirements, preview AI-ranked matches, and receive high-intent leads for callbacks or site visits.
 
 ## Run
 
 ```bash
-npm run dev -- --host 127.0.0.1 --port 4174
+npm run dev -- --host 127.0.0.1 --port 4173
 ```
 
 Open:
 
 ```text
-http://127.0.0.1:4174
+http://127.0.0.1:4173
 ```
 
-No install step is required. The app uses a small Node static server and browser-native JavaScript.
+No install step is required after dependencies are present. The local server serves the dashboard, property image uploads, and Supabase-backed property APIs.
 
-Product photos can be selected from your computer in the Add product form. The local dev server saves them into `product-images/` and stores a relative path like `/product-images/item.jpg` in Supabase.
+Property photos can be selected from your computer in the Add property form. The local dev server saves them into `property-images/` and stores a relative path like `/property-images/listing.jpg` in Supabase.
 
 For WhatsApp image sending, deploy the app/backend to a public HTTPS URL and set:
 
@@ -24,31 +24,22 @@ For WhatsApp image sending, deploy the app/backend to a public HTTPS URL and set
 PUBLIC_BASE_URL=https://your-public-domain.example
 ```
 
-On Railway, the backend can also use Railway's generated public domain automatically, but set `PUBLIC_BASE_URL` yourself if you use a custom domain.
-
-Meta cannot fetch images from `localhost` or a private Windows folder, so this public base URL is required before uploaded product photos can be sent as WhatsApp image messages.
+Meta cannot fetch images from `localhost` or a private Windows folder, so this public base URL is required before uploaded property photos can be sent as WhatsApp image messages.
 
 ## Supabase Setup
 
-Create this table in your Supabase SQL editor:
+Run the schema in:
 
-```sql
-create table products (
-  id uuid primary key default gen_random_uuid(),
-  shop_id text not null default 'demo-shop',
-  name text not null,
-  category text not null,
-  price numeric not null,
-  stock int not null default 0,
-  sizes text[] default '{}',
-  colors text[] default '{}',
-  image_url text,
-  status text not null default 'active',
-  inquiries int not null default 0,
-  orders int not null default 0,
-  created_at timestamptz default now()
-);
+```text
+supabase-schema.sql
 ```
+
+The schema creates:
+
+- `shops` for broker or agency profiles.
+- `properties` for rent and sale listings.
+- `leads` with `matched_property_ids` and lead intent.
+- `whatsapp_messages` for inbound and outbound message history.
 
 For a prototype, enable insert/select access for the anon role through Supabase RLS policies. For production, connect users to `shop_id` through auth and keep writes scoped to the owner.
 
@@ -63,16 +54,14 @@ export const SUPABASE_URL = "https://your-project.supabase.co";
 export const SUPABASE_ANON_KEY = "your-anon-key";
 ```
 
-The sidebar does not show database settings. Product listings now publish directly to Supabase; if the config or RLS policy is missing, the listing is not saved locally.
-
 ## Included
 
-- Analytics dashboard with revenue, conversion, low-stock, demand trend, and category demand.
-- Product listing form for name, price, category, stock, size, color, and image URL.
-- Listings grid with search and category filters.
-- WhatsApp AI match simulator that ranks products by customer query, stock, budget, and demand.
-- Supabase-backed product publishing from the listing form.
-- WhatsApp AI backend that uses Meta WhatsApp Cloud API, Supabase, and Gemini 2.0 Flash.
+- Broker dashboard with pipeline value, active properties, site visits, inquiry trend, and locality demand.
+- Property listing form for rent/sale type, locality, city, price, BHK, area, furnishing, availability, amenities, and image.
+- Properties grid with search, rent/sale filters, edit, pause, and delete actions.
+- WhatsApp lead inbox with requirement, matched properties, intent score, visit/callback CTA, and conversation trail.
+- AI match simulator that ranks properties by locality, budget, rent/sale intent, BHK, furnishing, and demand.
+- WhatsApp AI backend using Meta WhatsApp Cloud API, Supabase, and Gemini.
 
 ## WhatsApp AI Backend
 
@@ -87,12 +76,6 @@ WHATSAPP_VERIFY_TOKEN=
 GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
 PUBLIC_BASE_URL=https://your-public-domain.example
-```
-
-Create the extra WhatsApp AI tables with:
-
-```text
-supabase-schema.sql
 ```
 
 Install dependencies once:
@@ -113,15 +96,15 @@ Meta webhook URLs:
 GET/POST http://localhost:8787/webhooks/whatsapp
 ```
 
-For production, expose the backend through HTTPS and set the same `WHATSAPP_VERIFY_TOKEN` in Meta's webhook setup. The backend matches shop names from the `shops` table, fetches active in-stock products, uses Gemini to write Hinglish salesman captions, sends WhatsApp image messages, and saves leads when customers show buying interest.
+For production, expose the backend through HTTPS and set the same `WHATSAPP_VERIFY_TOKEN` in Meta's webhook setup. The backend matches broker names from `shops`, fetches active properties, uses Gemini to write Hinglish broker captions, sends WhatsApp image messages, and saves leads when customers show callback or site visit intent.
 
-Seed sample products:
+Seed sample properties:
 
 ```bash
 npm run seed:samples
 ```
 
-This inserts sample clothing products with public image URLs into the existing `products` table.
+This inserts realistic rent and sale listings into the `properties` table for `EstateIQ Demo Realty`.
 
 ## Deploy On Railway
 
@@ -143,6 +126,7 @@ WHATSAPP_ACCESS_TOKEN
 WHATSAPP_VERIFY_TOKEN
 GEMINI_API_KEY
 GEMINI_MODEL=gemini-2.5-flash
+PUBLIC_BASE_URL
 ```
 
 After Railway gives you a public domain, set Meta WhatsApp webhook callback URL to:

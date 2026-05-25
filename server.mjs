@@ -4,13 +4,13 @@ import { Buffer } from "node:buffer";
 import { extname, join, normalize, resolve } from "node:path";
 
 const root = process.cwd();
-const productImagesDir = join(root, "product-images");
+const propertyImagesDir = join(root, "property-images");
 const args = process.argv.slice(2);
 const host = readArg("--host") || "127.0.0.1";
 const port = Number(readArg("--port") || 4173);
 const maxUploadBytes = 8 * 1024 * 1024;
-const defaultShopSlug = "raj-fashion";
-const defaultShopName = "Raj Fashion";
+const defaultShopSlug = "estateiq-demo-realty";
+const defaultShopName = "EstateIQ Demo Realty";
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -112,36 +112,43 @@ async function ensureDefaultShop() {
     body: JSON.stringify({
       name: defaultShopName,
       slug: defaultShopSlug,
-      owner_name: `${defaultShopName} Owner`,
-      tone: "friendly, confident, local fashion salesman",
+      owner_name: "EstateIQ Broker",
+      tone: "friendly, practical, trusted real estate broker",
     }),
   });
   return rows?.[0]?.id || "";
 }
 
-function normalizeProductPayload(body, shopId) {
+function normalizePropertyPayload(body, shopId) {
   return {
     shop_id: shopId,
-    name: String(body.name || "").trim(),
+    title: String(body.title || body.name || "").trim(),
     description: String(body.description || "").trim(),
-    category: String(body.category || "").trim() || "General",
+    listing_type: ["rent", "sale"].includes(String(body.listing_type || "").toLowerCase())
+      ? String(body.listing_type).toLowerCase()
+      : "rent",
+    property_type: String(body.property_type || "Apartment").trim(),
+    locality: String(body.locality || "").trim(),
+    city: String(body.city || "").trim(),
     price: Number(body.price || 0),
-    stock: Number(body.stock || 0),
-    sizes: Array.isArray(body.sizes) ? body.sizes : [],
-    colors: Array.isArray(body.colors) ? body.colors : [],
+    bhk: Number(body.bhk || 0),
+    area_sqft: Number(body.area_sqft || 0),
+    furnishing: String(body.furnishing || "").trim(),
+    availability: String(body.availability || body.possession || "").trim(),
+    amenities: Array.isArray(body.amenities) ? body.amenities : [],
     image_url: body.image_url || "",
     status: body.status || "active",
     inquiries: Number(body.inquiries || 0),
-    orders: Number(body.orders || 0),
+    visits: Number(body.visits || 0),
   };
 }
 
-function productIdFromRequest(request) {
+function propertyIdFromRequest(request) {
   const url = new URL(request.url || "/", `http://${host}:${port}`);
   return url.searchParams.get("id") || "";
 }
 
-async function handleProductsApi(request, response) {
+async function handlePropertiesApi(request, response) {
   if (!hasSupabaseServerConfig()) {
     jsonResponse(response, 503, { ok: false, error: "missing_supabase_server_config" });
     return;
@@ -149,7 +156,7 @@ async function handleProductsApi(request, response) {
 
   const shopId = await ensureDefaultShop();
   if (!shopId) {
-    jsonResponse(response, 500, { ok: false, error: "default_shop_missing" });
+    jsonResponse(response, 500, { ok: false, error: "default_broker_missing" });
     return;
   }
 
@@ -159,63 +166,63 @@ async function handleProductsApi(request, response) {
       shop_id: `eq.${shopId}`,
       order: "created_at.desc",
     });
-    const products = await supabaseRequest(`products?${params.toString()}`);
-    jsonResponse(response, 200, { ok: true, shop_id: shopId, products });
+    const properties = await supabaseRequest(`properties?${params.toString()}`);
+    jsonResponse(response, 200, { ok: true, shop_id: shopId, properties });
     return;
   }
 
   if (request.method === "POST") {
-    const product = normalizeProductPayload(await readJsonBody(request), shopId);
-    if (!product.name || !product.price) {
-      jsonResponse(response, 400, { ok: false, error: "missing_product_fields" });
+    const property = normalizePropertyPayload(await readJsonBody(request), shopId);
+    if (!property.title || !property.price || !property.locality) {
+      jsonResponse(response, 400, { ok: false, error: "missing_property_fields" });
       return;
     }
-    const rows = await supabaseRequest("products", {
+    const rows = await supabaseRequest("properties", {
       method: "POST",
-      body: JSON.stringify(product),
+      body: JSON.stringify(property),
     });
-    jsonResponse(response, 200, { ok: true, shop_id: shopId, product: rows?.[0] || product });
+    jsonResponse(response, 200, { ok: true, shop_id: shopId, property: rows?.[0] || property });
     return;
   }
 
   if (request.method === "PATCH") {
-    const productId = productIdFromRequest(request);
-    if (!productId) {
-      jsonResponse(response, 400, { ok: false, error: "missing_product_id" });
+    const propertyId = propertyIdFromRequest(request);
+    if (!propertyId) {
+      jsonResponse(response, 400, { ok: false, error: "missing_property_id" });
       return;
     }
-    const product = normalizeProductPayload(await readJsonBody(request), shopId);
-    if (!product.name || !product.price) {
-      jsonResponse(response, 400, { ok: false, error: "missing_product_fields" });
+    const property = normalizePropertyPayload(await readJsonBody(request), shopId);
+    if (!property.title || !property.price || !property.locality) {
+      jsonResponse(response, 400, { ok: false, error: "missing_property_fields" });
       return;
     }
     const params = new URLSearchParams({
-      id: `eq.${productId}`,
+      id: `eq.${propertyId}`,
       shop_id: `eq.${shopId}`,
     });
-    const rows = await supabaseRequest(`products?${params.toString()}`, {
+    const rows = await supabaseRequest(`properties?${params.toString()}`, {
       method: "PATCH",
-      body: JSON.stringify(product),
+      body: JSON.stringify(property),
     });
-    jsonResponse(response, 200, { ok: true, shop_id: shopId, product: rows?.[0] || { ...product, id: productId } });
+    jsonResponse(response, 200, { ok: true, shop_id: shopId, property: rows?.[0] || { ...property, id: propertyId } });
     return;
   }
 
   if (request.method === "DELETE") {
-    const productId = productIdFromRequest(request);
-    if (!productId) {
-      jsonResponse(response, 400, { ok: false, error: "missing_product_id" });
+    const propertyId = propertyIdFromRequest(request);
+    if (!propertyId) {
+      jsonResponse(response, 400, { ok: false, error: "missing_property_id" });
       return;
     }
     const params = new URLSearchParams({
-      id: `eq.${productId}`,
+      id: `eq.${propertyId}`,
       shop_id: `eq.${shopId}`,
     });
-    await supabaseRequest(`products?${params.toString()}`, {
+    await supabaseRequest(`properties?${params.toString()}`, {
       method: "DELETE",
       prefer: "return=minimal",
     });
-    jsonResponse(response, 200, { ok: true, product_id: productId });
+    jsonResponse(response, 200, { ok: true, property_id: propertyId });
     return;
   }
 
@@ -234,7 +241,7 @@ async function handleLeadsApi(request, response) {
 
   const shopId = await ensureDefaultShop();
   if (!shopId) {
-    jsonResponse(response, 500, { ok: false, error: "default_shop_missing" });
+    jsonResponse(response, 500, { ok: false, error: "default_broker_missing" });
     return;
   }
 
@@ -281,16 +288,17 @@ function readJsonBody(request) {
   });
 }
 
-function safeImageName(fileName = "product-image") {
+function safeImageName(fileName = "property-image") {
   const extension = extname(fileName).toLowerCase();
   const allowed = new Set([".jpg", ".jpeg", ".png", ".webp"]);
   const safeExtension = allowed.has(extension) ? extension : ".jpg";
-  const base = fileName
-    .replace(/\.[^.]+$/, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48) || "product-image";
+  const base =
+    fileName
+      .replace(/\.[^.]+$/, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 48) || "property-image";
   return `${base}-${Date.now()}${safeExtension}`;
 }
 
@@ -304,9 +312,9 @@ async function handleImageUpload(request, response) {
     }
 
     const fileName = safeImageName(body.fileName);
-    await mkdir(productImagesDir, { recursive: true });
-    await writeFile(join(productImagesDir, fileName), Buffer.from(match[1], "base64"));
-    jsonResponse(response, 200, { ok: true, image_url: `/product-images/${fileName}` });
+    await mkdir(propertyImagesDir, { recursive: true });
+    await writeFile(join(propertyImagesDir, fileName), Buffer.from(match[1], "base64"));
+    jsonResponse(response, 200, { ok: true, image_url: `/property-images/${fileName}` });
   } catch (error) {
     const status = error.message === "upload_too_large" ? 413 : 400;
     jsonResponse(response, status, { ok: false, error: error.message });
@@ -316,12 +324,12 @@ async function handleImageUpload(request, response) {
 const server = createServer(async (request, response) => {
   const pathname = new URL(request.url || "/", `http://${host}:${port}`).pathname;
   try {
-    if (pathname === "/api/product-images" && request.method === "POST") {
+    if (pathname === "/api/property-images" && request.method === "POST") {
       await handleImageUpload(request, response);
       return;
     }
-    if (pathname === "/api/products") {
-      await handleProductsApi(request, response);
+    if (pathname === "/api/properties") {
+      await handlePropertiesApi(request, response);
       return;
     }
     if (pathname === "/api/leads") {
@@ -347,5 +355,5 @@ const server = createServer(async (request, response) => {
 });
 
 server.listen(port, host, () => {
-  console.log(`ThreadIQ running at http://${host}:${port}`);
+  console.log(`EstateIQ running at http://${host}:${port}`);
 });

@@ -1,127 +1,166 @@
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase-config.js";
 
-const demoProducts = [
+const demoProperties = [
   {
     id: crypto.randomUUID(),
-    name: "Black Oversized Shirt",
-    category: "Shirts",
-    price: 1499,
-    stock: 16,
-    sizes: ["M", "L", "XL"],
-    colors: ["Black"],
-    image_url: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=900&q=80",
+    title: "Furnished 2BHK near Andheri West Metro",
+    description: "Move-in ready apartment in a gated society with parking, lift, security, and quick metro access.",
+    listing_type: "rent",
+    property_type: "Apartment",
+    locality: "Andheri West",
+    city: "Mumbai",
+    price: 48000,
+    bhk: 2,
+    area_sqft: 780,
+    furnishing: "Furnished",
+    availability: "Immediate",
+    amenities: ["Parking", "Lift", "Security", "Metro nearby"],
+    image_url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=80",
     status: "active",
-    inquiries: 46,
-    orders: 13,
+    inquiries: 34,
+    visits: 9,
   },
   {
     id: crypto.randomUUID(),
-    name: "Ivory Linen Co-ord",
-    category: "Co-ords",
-    price: 2299,
-    stock: 8,
-    sizes: ["S", "M", "L"],
-    colors: ["Ivory", "Beige"],
-    image_url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80",
+    title: "Lake-view 3BHK in Powai",
+    description: "Premium resale apartment with balcony, clubhouse access, and two covered parking slots.",
+    listing_type: "sale",
+    property_type: "Apartment",
+    locality: "Powai",
+    city: "Mumbai",
+    price: 28500000,
+    bhk: 3,
+    area_sqft: 1280,
+    furnishing: "Semi-furnished",
+    availability: "Ready to move",
+    amenities: ["Clubhouse", "Balcony", "Parking", "Lake view"],
+    image_url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
     status: "active",
-    inquiries: 33,
-    orders: 8,
+    inquiries: 28,
+    visits: 6,
   },
   {
     id: crypto.randomUUID(),
-    name: "Washed Denim Jacket",
-    category: "Jackets",
-    price: 2799,
-    stock: 5,
-    sizes: ["M", "L"],
-    colors: ["Blue"],
-    image_url: "https://images.unsplash.com/photo-1543076447-215ad9ba6923?auto=format&fit=crop&w=900&q=80",
+    title: "Ready 2BHK in Sector 76 Noida",
+    description: "Compact family apartment in a maintained society with park, power backup, and covered parking.",
+    listing_type: "sale",
+    property_type: "Apartment",
+    locality: "Sector 76",
+    city: "Noida",
+    price: 8200000,
+    bhk: 2,
+    area_sqft: 1045,
+    furnishing: "Unfurnished",
+    availability: "Ready to move",
+    amenities: ["Park", "Power backup", "Parking", "Security"],
+    image_url: "https://images.unsplash.com/photo-1560185007-c5ca9d2c014d?auto=format&fit=crop&w=1200&q=80",
     status: "active",
-    inquiries: 27,
-    orders: 6,
+    inquiries: 22,
+    visits: 5,
   },
   {
     id: crypto.randomUUID(),
-    name: "Sage Relaxed Trousers",
-    category: "Trousers",
-    price: 1899,
-    stock: 3,
-    sizes: ["30", "32", "34"],
-    colors: ["Sage", "Green"],
-    image_url: "https://images.unsplash.com/photo-1506629905607-d405b7a30db9?auto=format&fit=crop&w=900&q=80",
+    title: "Modern 1BHK in Golf Course Extension",
+    description: "Bright rental apartment ideal for professionals, with gym, lift, security, and fast office access.",
+    listing_type: "rent",
+    property_type: "Apartment",
+    locality: "Golf Course Extension",
+    city: "Gurugram",
+    price: 32000,
+    bhk: 1,
+    area_sqft: 610,
+    furnishing: "Semi-furnished",
+    availability: "From next month",
+    amenities: ["Gym", "Lift", "Security", "Power backup"],
+    image_url: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80",
     status: "active",
-    inquiries: 21,
-    orders: 4,
+    inquiries: 26,
+    visits: 7,
   },
   {
     id: crypto.randomUUID(),
-    name: "Rust Party Kurta",
-    category: "Ethnic",
-    price: 1699,
-    stock: 11,
-    sizes: ["S", "M", "L", "XL"],
-    colors: ["Rust", "Orange"],
-    image_url: "https://images.unsplash.com/photo-1614251056216-f748f76cd228?auto=format&fit=crop&w=900&q=80",
+    title: "4BHK villa near Whitefield",
+    description: "Independent villa with private garden, servant room, two car parks, and quiet gated community access.",
+    listing_type: "sale",
+    property_type: "Villa",
+    locality: "Whitefield",
+    city: "Bengaluru",
+    price: 36000000,
+    bhk: 4,
+    area_sqft: 2650,
+    furnishing: "Semi-furnished",
+    availability: "Ready to move",
+    amenities: ["Private garden", "Gated community", "Parking", "Servant room"],
+    image_url: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=80",
     status: "active",
-    inquiries: 18,
-    orders: 5,
+    inquiries: 17,
+    visits: 4,
   },
   {
     id: crypto.randomUUID(),
-    name: "White Minimal Sneakers",
-    category: "Footwear",
-    price: 2499,
-    stock: 22,
-    sizes: ["7", "8", "9", "10"],
-    colors: ["White"],
-    image_url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=900&q=80",
+    title: "Compact studio in Bandra West",
+    description: "Well-located studio for single occupancy with furnished setup and quick access to cafes and offices.",
+    listing_type: "rent",
+    property_type: "Studio",
+    locality: "Bandra West",
+    city: "Mumbai",
+    price: 42000,
+    bhk: 0,
+    area_sqft: 410,
+    furnishing: "Furnished",
+    availability: "Immediate",
+    amenities: ["Furnished", "Security", "Prime location"],
+    image_url: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=1200&q=80",
     status: "active",
-    inquiries: 40,
-    orders: 14,
+    inquiries: 31,
+    visits: 8,
   },
 ];
 
 const leadSeries = {
-  7: [18, 24, 20, 29, 34, 31, 42],
-  14: [12, 14, 16, 15, 19, 22, 20, 24, 26, 27, 32, 31, 35, 42],
-  30: [6, 8, 9, 10, 12, 13, 13, 15, 16, 16, 18, 20, 22, 21, 24, 25, 24, 27, 28, 30, 29, 32, 33, 31, 34, 36, 37, 39, 40, 42],
+  7: [8, 12, 11, 16, 19, 21, 28],
+  14: [5, 7, 9, 8, 12, 14, 13, 15, 18, 17, 20, 22, 24, 28],
+  30: [3, 4, 6, 7, 8, 9, 9, 11, 10, 13, 14, 14, 16, 17, 16, 19, 20, 21, 23, 22, 24, 25, 26, 24, 27, 29, 30, 31, 33, 35],
 };
 
 const demoLeads = [
   {
     id: "demo-lead-1",
     customer_whatsapp: "919876543210",
-    customer_message: "black shirt under 2000 L size chahiye",
-    matched_product_names: ["Black Oversized Shirt"],
+    customer_message: "2BHK furnished flat rent in Andheri under 50k, visit karna hai",
+    matched_property_names: ["Furnished 2BHK near Andheri West Metro"],
+    intent: "site_visit",
     status: "new",
     created_at: new Date().toISOString(),
   },
   {
     id: "demo-lead-2",
     customer_whatsapp: "918888777666",
-    customer_message: "party ke liye kurta dikhao",
-    matched_product_names: ["Rust Party Kurta"],
+    customer_message: "Noida mein 2BHK sale property budget 85 lakh",
+    matched_property_names: ["Ready 2BHK in Sector 76 Noida"],
+    intent: "callback",
     status: "follow_up",
     created_at: new Date(Date.now() - 1000 * 60 * 52).toISOString(),
   },
   {
     id: "demo-lead-3",
     customer_whatsapp: "917777666555",
-    customer_message: "white sneakers available hai kya",
-    matched_product_names: ["White Minimal Sneakers"],
+    customer_message: "Bandra studio rent available hai kya",
+    matched_property_names: ["Compact studio in Bandra West"],
+    intent: "shortlist",
     status: "new",
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
   },
 ];
 
 const state = {
-  products: [],
+  properties: [],
   leads: [],
   leadMessages: [],
   selectedLeadId: "",
   inventoryPage: 1,
   inventoryPageSize: 8,
-  lowStockOnly: false,
+  needsVisitOnly: false,
   defaultShopId: "",
   config: {
     url: SUPABASE_URL,
@@ -140,8 +179,9 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 function loadLocalState() {
-  state.products = demoProducts;
+  state.properties = demoProperties;
   state.leads = demoLeads.map(normalizeLead);
+  state.selectedLeadId = state.leads[0]?.id || "";
 }
 
 function hasSupabaseConfig() {
@@ -157,20 +197,18 @@ function supabaseHeaders() {
   };
 }
 
-async function fetchSupabaseProducts() {
+async function fetchSupabaseProperties() {
   try {
-    const localResponse = await fetch("/api/products");
+    const localResponse = await fetch("/api/properties");
     if (localResponse.ok) {
       const result = await localResponse.json();
       state.defaultShopId = result.shop_id || state.defaultShopId;
-      state.products = Array.isArray(result.products) ? result.products.map(normalizeProduct) : [];
+      state.properties = Array.isArray(result.properties) ? result.properties.map(normalizeProperty) : [];
       return;
     }
-    if (localResponse.status !== 404) {
-      throw new Error("Local products API failed");
-    }
+    if (localResponse.status !== 404) throw new Error("Local properties API failed");
   } catch {
-    // Fall back to browser-side Supabase for deployments without the local API.
+    // Fall back to browser-side Supabase for static deployments.
   }
 
   if (!hasSupabaseConfig()) {
@@ -181,21 +219,17 @@ async function fetchSupabaseProducts() {
     select: "*",
     order: "created_at.desc",
   });
-  if (state.defaultShopId) {
-    params.set("shop_id", `eq.${state.defaultShopId}`);
-  }
-  const endpoint = `${state.config.url.replace(/\/$/, "")}/rest/v1/products?${params.toString()}`;
+  if (state.defaultShopId) params.set("shop_id", `eq.${state.defaultShopId}`);
+  const endpoint = `${state.config.url.replace(/\/$/, "")}/rest/v1/properties?${params.toString()}`;
   const response = await fetch(endpoint, { headers: supabaseHeaders() });
-  if (!response.ok) throw new Error("Supabase products fetch failed");
+  if (!response.ok) throw new Error("Supabase properties fetch failed");
   const rows = await response.json();
-  if (Array.isArray(rows)) {
-    state.products = rows.map(normalizeProduct);
-  }
+  if (Array.isArray(rows)) state.properties = rows.map(normalizeProperty);
 }
 
 async function fetchDefaultShopId() {
   if (!hasSupabaseConfig()) return "";
-  const endpoint = `${state.config.url.replace(/\/$/, "")}/rest/v1/shops?select=id&slug=eq.raj-fashion&limit=1`;
+  const endpoint = `${state.config.url.replace(/\/$/, "")}/rest/v1/shops?select=id&slug=eq.estateiq-demo-realty&limit=1`;
   const response = await fetch(endpoint, { headers: supabaseHeaders() });
   if (!response.ok) return "";
   const rows = await response.json();
@@ -219,91 +253,77 @@ async function fetchLeads() {
   }
 }
 
-async function insertSupabaseProduct(product) {
+async function insertSupabaseProperty(property) {
   try {
-    const localResponse = await fetch("/api/products", {
+    const localResponse = await fetch("/api/properties", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(product),
+      body: JSON.stringify(property),
     });
     if (localResponse.ok) {
       const result = await localResponse.json();
       state.defaultShopId = result.shop_id || state.defaultShopId;
-      return normalizeProduct(result.product || product);
+      return normalizeProperty(result.property || property);
     }
     if (localResponse.status !== 404) {
       const result = await localResponse.json().catch(() => ({}));
-      throw new Error(result.error || "Local product publish failed");
+      throw new Error(result.error || "Local property publish failed");
     }
   } catch {
-    throw new Error("Local product publish failed");
+    throw new Error("Local property publish failed");
   }
 
-  if (!hasSupabaseConfig()) {
-    throw new Error("Supabase config missing");
-  }
-  if (!state.defaultShopId) {
-    await fetchDefaultShopId();
-  }
-  if (!state.defaultShopId) {
-    throw new Error("Default shop missing");
-  }
-  const endpoint = `${state.config.url.replace(/\/$/, "")}/rest/v1/products`;
+  if (!hasSupabaseConfig()) throw new Error("Supabase config missing");
+  if (!state.defaultShopId) await fetchDefaultShopId();
+  if (!state.defaultShopId) throw new Error("Default broker missing");
+  const endpoint = `${state.config.url.replace(/\/$/, "")}/rest/v1/properties`;
   const response = await fetch(endpoint, {
     method: "POST",
     headers: supabaseHeaders(),
-    body: JSON.stringify({
-      shop_id: state.defaultShopId,
-      name: product.name,
-      description: product.description,
-      category: product.category,
-      price: product.price,
-      stock: product.stock,
-      sizes: product.sizes,
-      colors: product.colors,
-      image_url: product.image_url,
-      status: product.status,
-      inquiries: product.inquiries,
-      orders: product.orders,
-    }),
+    body: JSON.stringify({ ...property, shop_id: state.defaultShopId }),
   });
-  if (!response.ok) throw new Error("Supabase product insert failed");
+  if (!response.ok) throw new Error("Supabase property insert failed");
   const rows = await response.json();
-  return rows[0] ? normalizeProduct(rows[0]) : product;
+  return rows[0] ? normalizeProperty(rows[0]) : property;
 }
 
-async function updateSupabaseProduct(product) {
-  const response = await fetch(`/api/products?id=${encodeURIComponent(product.id)}`, {
+async function updateSupabaseProperty(property) {
+  const response = await fetch(`/api/properties?id=${encodeURIComponent(property.id)}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(product),
+    body: JSON.stringify(property),
   });
-  if (!response.ok) throw new Error("Product update failed");
+  if (!response.ok) throw new Error("Property update failed");
   const result = await response.json();
-  return normalizeProduct(result.product || product);
+  return normalizeProperty(result.property || property);
 }
 
-async function deleteSupabaseProduct(productId) {
-  const response = await fetch(`/api/products?id=${encodeURIComponent(productId)}`, {
+async function deleteSupabaseProperty(propertyId) {
+  const response = await fetch(`/api/properties?id=${encodeURIComponent(propertyId)}`, {
     method: "DELETE",
   });
-  if (!response.ok) throw new Error("Product delete failed");
+  if (!response.ok) throw new Error("Property delete failed");
 }
 
-function normalizeProduct(product) {
+function normalizeProperty(property) {
   return {
-    id: product.id || crypto.randomUUID(),
-    name: product.name || "Untitled product",
-    description: product.description || "",
-    category: product.category || "General",
-    price: Number(product.price || 0),
-    stock: Number(product.stock || 0),
-    sizes: Array.isArray(product.sizes) ? product.sizes : splitList(product.sizes),
-    colors: Array.isArray(product.colors) ? product.colors : splitList(product.colors),
-    image_url: product.image_url || "",
-    status: product.status || "active",
-    inquiries: Number(product.inquiries || 0),
-    orders: Number(product.orders || 0),
+    id: property.id || crypto.randomUUID(),
+    title: property.title || property.name || "Untitled property",
+    description: property.description || "",
+    listing_type: property.listing_type || "rent",
+    property_type: property.property_type || "Apartment",
+    locality: property.locality || "",
+    city: property.city || "",
+    price: Number(property.price || 0),
+    bhk: Number(property.bhk || 0),
+    area_sqft: Number(property.area_sqft || 0),
+    furnishing: property.furnishing || "",
+    availability: property.availability || property.possession || "",
+    amenities: Array.isArray(property.amenities) ? property.amenities : splitList(property.amenities),
+    image_url: property.image_url || "",
+    status: property.status || "active",
+    inquiries: Number(property.inquiries || 0),
+    visits: Number(property.visits || 0),
   };
 }
 
@@ -312,8 +332,9 @@ function normalizeLead(lead) {
     id: lead.id || crypto.randomUUID(),
     customer_whatsapp: lead.customer_whatsapp || "",
     customer_message: lead.customer_message || "",
-    matched_product_ids: Array.isArray(lead.matched_product_ids) ? lead.matched_product_ids : splitList(lead.matched_product_ids),
-    matched_product_names: Array.isArray(lead.matched_product_names) ? lead.matched_product_names : splitList(lead.matched_product_names),
+    matched_property_ids: Array.isArray(lead.matched_property_ids) ? lead.matched_property_ids : splitList(lead.matched_property_ids),
+    matched_property_names: Array.isArray(lead.matched_property_names) ? lead.matched_property_names : splitList(lead.matched_property_names),
+    intent: lead.intent || "site_visit",
     status: lead.status || "new",
     created_at: lead.created_at || new Date().toISOString(),
   };
@@ -341,9 +362,8 @@ function splitList(value) {
 function renderAll() {
   updateSyncButton(hasSupabaseConfig() ? "Supabase connected" : "Supabase config missing");
   renderMetrics();
-  renderCategoryFilter();
-  renderProducts();
-  renderCategoryBars();
+  renderProperties();
+  renderLocalityBars();
   renderHealth();
   renderHotLeads();
   renderLeadInbox();
@@ -351,93 +371,96 @@ function renderAll() {
 }
 
 function renderMetrics() {
-  const revenue = state.products.reduce((sum, product) => sum + product.price * product.orders, 0);
-  const inquiries = state.products.reduce((sum, product) => sum + product.inquiries, 0);
-  const orders = state.products.reduce((sum, product) => sum + product.orders, 0);
-  const lowStock = state.products.filter((product) => product.stock <= 5).length;
-  const conversion = inquiries ? Math.round((orders / inquiries) * 100) : 0;
+  const active = state.properties.filter((property) => property.status === "active");
+  const pipelineValue = active.reduce((sum, property) => {
+    return sum + (property.listing_type === "rent" ? property.price * 12 : property.price);
+  }, 0);
+  const inquiries = active.reduce((sum, property) => sum + property.inquiries, 0);
+  const visits = active.reduce((sum, property) => sum + property.visits, 0);
+  const conversion = inquiries ? Math.round((visits / inquiries) * 100) : 0;
+  const rentCount = active.filter((property) => property.listing_type === "rent").length;
+  const saleCount = active.filter((property) => property.listing_type === "sale").length;
 
-  $("#metricRevenue").textContent = currency.format(revenue);
-  $("#metricProducts").textContent = state.products.length;
+  $("#metricPipeline").textContent = formatCompactMoney(pipelineValue);
+  $("#metricProperties").textContent = active.length;
   $("#metricConversion").textContent = `${conversion}%`;
-  $("#metricLowStock").textContent = lowStock;
+  $("#metricVisits").textContent = visits;
+  $("#rentSaleSplit").textContent = `${rentCount} rent / ${saleCount} sale`;
   $("#todayLeads").textContent = `${state.leads.length || leadSeries[7].at(-1)} leads`;
 }
 
-function renderCategoryFilter() {
-  const current = $("#categoryFilter").value;
-  const categories = uniqueCategories();
-  $("#categoryFilter").innerHTML = [
-    `<option value="all">All categories</option>`,
-    ...categories.map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`),
-  ].join("");
-  $("#categoryFilter").value = categories.includes(current) ? current : "all";
-}
-
-function renderProducts() {
+function renderProperties() {
   const query = $("#searchInput").value.trim().toLowerCase();
-  const category = $("#categoryFilter").value;
-  const products = state.products.filter((product) => {
+  const type = $("#typeFilter").value;
+  const properties = state.properties.filter((property) => {
     const haystack = [
-      product.name,
-      product.category,
-      product.colors.join(" "),
-      product.sizes.join(" "),
-      product.price,
+      property.title,
+      property.description,
+      property.listing_type,
+      property.property_type,
+      property.locality,
+      property.city,
+      property.bhk,
+      property.area_sqft,
+      property.furnishing,
+      property.availability,
+      property.amenities.join(" "),
+      property.price,
     ]
       .join(" ")
       .toLowerCase();
-    return (
-      haystack.includes(query) &&
-      (category === "all" || product.category === category) &&
-      (!state.lowStockOnly || product.stock <= 5)
-    );
+    const needsVisits = property.inquiries >= 10 && property.visits <= 2;
+    return haystack.includes(query) && (type === "all" || property.listing_type === type) && (!state.needsVisitOnly || needsVisits);
   });
-  const pageCount = Math.max(Math.ceil(products.length / state.inventoryPageSize), 1);
+  const pageCount = Math.max(Math.ceil(properties.length / state.inventoryPageSize), 1);
   state.inventoryPage = Math.min(state.inventoryPage, pageCount);
   const start = (state.inventoryPage - 1) * state.inventoryPageSize;
-  const visibleProducts = products.slice(start, start + state.inventoryPageSize);
+  const visibleProperties = properties.slice(start, start + state.inventoryPageSize);
 
-  $("#productGrid").innerHTML = visibleProducts.length
-    ? visibleProducts.map(renderProductCard).join("")
-    : `<div class="empty-state">No products match this filter yet.</div>`;
-  $("#listingCount").textContent = products.length
-    ? `Showing ${start + 1}-${Math.min(start + state.inventoryPageSize, products.length)} of ${products.length} products`
-    : "No products found";
-  renderProductPager(pageCount);
+  $("#propertyGrid").innerHTML = visibleProperties.length
+    ? visibleProperties.map(renderPropertyCard).join("")
+    : `<div class="empty-state">No properties match this filter yet.</div>`;
+  $("#listingCount").textContent = properties.length
+    ? `Showing ${start + 1}-${Math.min(start + state.inventoryPageSize, properties.length)} of ${properties.length} properties`
+    : "No properties found";
+  renderPropertyPager(pageCount);
 }
 
-function renderProductCard(product) {
-  const image = product.image_url || "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=900&q=80";
-  const tags = [...product.sizes.slice(0, 1), ...product.colors.slice(0, 1)];
+function renderPropertyCard(property) {
+  const image = property.image_url || "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&fit=crop&w=1200&q=80";
+  const tags = [
+    property.listing_type === "rent" ? "Rent" : "Sale",
+    bhkLabel(property),
+    property.furnishing,
+    property.availability,
+  ].filter(Boolean);
   return `
-    <article class="product-card catalog-card">
-      <div class="product-media">
-        <img src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}" loading="lazy" />
-        <button class="favorite-button" type="button" aria-label="Save ${escapeHtml(product.name)}">♡</button>
-        <div class="product-actions">
-          <button type="button" data-edit-product="${escapeHtml(product.id)}">Edit</button>
-          <button type="button" data-delete-product="${escapeHtml(product.id)}">Delete</button>
+    <article class="property-card catalog-card">
+      <div class="property-media">
+        <img src="${escapeHtml(image)}" alt="${escapeHtml(property.title)}" loading="lazy" />
+        <span class="listing-badge ${escapeHtml(property.listing_type)}">${escapeHtml(property.listing_type)}</span>
+        <div class="property-actions">
+          <button type="button" data-edit-property="${escapeHtml(property.id)}">Edit</button>
+          <button type="button" data-delete-property="${escapeHtml(property.id)}">Delete</button>
         </div>
       </div>
-      <div class="product-content">
-        <div class="product-title">
-          <strong>${escapeHtml(product.name)}</strong>
-          <span class="price">${currency.format(product.price)}</span>
+      <div class="property-content">
+        <div class="property-title">
+          <strong>${escapeHtml(property.title)}</strong>
+          <span class="price">${formatPrice(property)}</span>
         </div>
-        <small>${product.stock} in stock · ${product.inquiries} inquiries</small>
+        <small>${escapeHtml(property.locality)}, ${escapeHtml(property.city)} - ${Number(property.area_sqft || 0).toLocaleString("en-IN")} sq ft - ${property.inquiries} inquiries</small>
         <div class="tag-list">
-          ${tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
-          <span class="tag category-tag">${escapeHtml(product.category)}</span>
+          ${tags.slice(0, 4).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
         </div>
       </div>
     </article>
   `;
 }
 
-function renderProductPager(pageCount) {
+function renderPropertyPager(pageCount) {
   const buttons = [];
-  buttons.push(`<button type="button" data-page-step="-1" ${state.inventoryPage === 1 ? "disabled" : ""}>‹</button>`);
+  buttons.push(`<button type="button" data-page-step="-1" ${state.inventoryPage === 1 ? "disabled" : ""}>Prev</button>`);
   for (let page = 1; page <= pageCount; page += 1) {
     if (pageCount > 6 && page > 3 && page < pageCount) {
       if (page === 4) buttons.push(`<span>...</span>`);
@@ -445,28 +468,27 @@ function renderProductPager(pageCount) {
     }
     buttons.push(`<button class="${page === state.inventoryPage ? "active" : ""}" type="button" data-page="${page}">${page}</button>`);
   }
-  buttons.push(`<button type="button" data-page-step="1" ${state.inventoryPage === pageCount ? "disabled" : ""}>›</button>`);
-  $("#productPager").innerHTML = buttons.join("");
+  buttons.push(`<button type="button" data-page-step="1" ${state.inventoryPage === pageCount ? "disabled" : ""}>Next</button>`);
+  $("#propertyPager").innerHTML = buttons.join("");
 }
 
-function renderCategoryBars() {
-  const totals = uniqueCategories().map((category) => ({
-    category,
-    value: state.products
-      .filter((product) => product.category === category)
-      .reduce((sum, product) => sum + product.inquiries, 0),
-  }));
+function renderLocalityBars() {
+  const totals = [...new Set(state.properties.map((property) => property.locality).filter(Boolean))]
+    .map((locality) => ({
+      locality,
+      value: state.properties.filter((property) => property.locality === locality).reduce((sum, property) => sum + property.inquiries, 0),
+    }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
   const max = Math.max(...totals.map((item) => item.value), 1);
   const total = Math.max(totals.reduce((sum, item) => sum + item.value, 0), 1);
   $("#categoryBars").innerHTML = totals
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5)
     .map(
       (item, index) => `
       <div class="bar-row">
         <header>
           <span>${index + 1}</span>
-          <strong>${escapeHtml(item.category)}</strong>
+          <strong>${escapeHtml(item.locality)}</strong>
           <em>${item.value} (${Math.round((item.value / total) * 100)}%)</em>
         </header>
         <div class="bar-track"><div class="bar-fill" style="width: ${(item.value / max) * 100}%"></div></div>
@@ -477,13 +499,13 @@ function renderCategoryBars() {
 }
 
 function renderHealth() {
-  const sorted = [...state.products]
-    .sort((a, b) => a.stock - b.stock || b.inquiries - a.inquiries)
+  const sorted = [...state.properties]
+    .sort((a, b) => healthPriority(b) - healthPriority(a))
     .slice(0, 4);
   $("#healthList").innerHTML = `
-    <div class="health-table" role="table" aria-label="Listing health">
+    <div class="health-table" role="table" aria-label="Property health">
       <div class="health-row head" role="row">
-        <span>Product</span>
+        <span>Property</span>
         <span>Issue</span>
         <span>Priority</span>
         <span>Suggested Action</span>
@@ -495,45 +517,51 @@ function renderHealth() {
   `;
 }
 
-function renderHealthRow(product) {
-  const needsRestock = product.stock <= 5;
-  const missingImage = !product.image_url;
-  const issue = missingImage ? "Missing product image" : needsRestock ? "Low stock risk" : product.sizes.length ? "Boost WhatsApp demand" : "Missing size options";
-  const priority = missingImage || needsRestock ? "High" : product.sizes.length ? "Low" : "Medium";
-  const status = missingImage || needsRestock ? "Needs Attention" : product.sizes.length ? "Pending" : "In Progress";
+function healthPriority(property) {
+  if (!property.image_url) return 3;
+  if (!property.availability) return 2;
+  if (property.inquiries >= 10 && property.visits <= 2) return 2;
+  return 1;
+}
+
+function renderHealthRow(property) {
+  const missingImage = !property.image_url;
+  const missingAvailability = !property.availability;
+  const needsVisits = property.inquiries >= 10 && property.visits <= 2;
+  const issue = missingImage ? "Missing property photo" : missingAvailability ? "Availability unclear" : needsVisits ? "High demand, low visits" : "Ready for AI matching";
+  const priority = missingImage ? "High" : missingAvailability || needsVisits ? "Medium" : "Low";
+  const status = missingImage || missingAvailability ? "Needs Attention" : needsVisits ? "In Progress" : "Pending";
   const action = missingImage
-    ? "Add clear front and back photos"
-    : needsRestock
-      ? "Restock or pause recommendations"
-      : product.sizes.length
-        ? "Promote in WhatsApp replies"
-        : "Add all available sizes";
+    ? "Add a clear listing photo"
+    : missingAvailability
+      ? "Confirm possession or move-in timing"
+      : needsVisits
+        ? "Push callback and site visit CTA"
+        : "Keep active in WhatsApp matches";
   return `
     <div class="health-row" role="row">
-      <span class="health-product">
-        <img src="${escapeHtml(product.image_url || "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=900&q=80")}" alt="${escapeHtml(product.name)}" />
+      <span class="health-property">
+        <img src="${escapeHtml(property.image_url || "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&fit=crop&w=1200&q=80")}" alt="${escapeHtml(property.title)}" />
         <span>
-          <strong>${escapeHtml(product.name)}</strong>
-          <small>ID: PRD-${escapeHtml(String(product.id).slice(0, 6).toUpperCase())}</small>
+          <strong>${escapeHtml(property.title)}</strong>
+          <small>${escapeHtml(property.locality)}, ${escapeHtml(property.city)}</small>
         </span>
       </span>
       <span>${escapeHtml(issue)}</span>
       <span><mark class="priority ${priority.toLowerCase()}">${escapeHtml(priority)}</mark></span>
       <span>${escapeHtml(action)}</span>
       <span><mark class="status-badge ${status.toLowerCase().replace(/\s+/g, "-")}">${escapeHtml(status)}</mark></span>
-      <span><button class="table-action" data-open-listing type="button">Fix Listing</button></span>
+      <span><button class="table-action" data-open-listing type="button">Fix</button></span>
     </div>
   `;
 }
 
 function renderHotLeads() {
-  const leads = [...state.leads]
-    .sort((a, b) => leadIntentScore(b) - leadIntentScore(a))
-    .slice(0, 3);
+  const leads = [...state.leads].sort((a, b) => leadIntentScore(b) - leadIntentScore(a)).slice(0, 3);
   $("#hotLeadList").innerHTML = leads.length
     ? leads
         .map((lead) => {
-          const products = leadProducts(lead).slice(0, 2);
+          const properties = leadProperties(lead).slice(0, 2);
           return `
             <button class="hot-lead-card" data-lead-id="${escapeHtml(lead.id)}" type="button">
               <span class="lead-avatar">${escapeHtml(customerInitial(lead.customer_whatsapp))}</span>
@@ -541,12 +569,12 @@ function renderHotLeads() {
                 <strong>+${escapeHtml(maskPhone(lead.customer_whatsapp))}</strong>
                 <small>${escapeHtml(lead.customer_message)}</small>
               </span>
-              <em>${products.length ? products.map((product) => escapeHtml(product.name)).join(", ") : "Needs review"}</em>
+              <em>${properties.length ? properties.map((property) => escapeHtml(property.locality)).join(", ") : escapeHtml(statusLabel(lead.intent))}</em>
             </button>
           `;
         })
         .join("")
-    : `<div class="empty-state">WhatsApp leads will appear here after customers ask for products.</div>`;
+    : `<div class="empty-state">WhatsApp leads will appear here after customers ask for properties.</div>`;
 }
 
 function renderLeadInbox() {
@@ -557,63 +585,60 @@ function renderLeadInbox() {
 
 function renderLeadMetrics() {
   const open = state.leads.filter((lead) => lead.status !== "closed").length;
-  const hot = state.leads.filter((lead) => leadIntentScore(lead) >= 70).length;
-  const today = state.leads.filter((lead) => new Date(lead.created_at).toDateString() === new Date().toDateString()).length;
+  const hot = state.leads.filter((lead) => leadIntentScore(lead) >= 75).length;
+  const today = state.leads.filter((lead) => isToday(lead.created_at)).length || state.leads.length;
   $("#leadOpenCount").textContent = open;
   $("#leadHotCount").textContent = hot;
   $("#leadTodayCount").textContent = today;
 }
 
 function renderLeadList() {
-  const query = $("#leadSearchInput")?.value.trim().toLowerCase() || "";
-  const status = $("#leadStatusFilter")?.value || "all";
+  const query = $("#leadSearchInput").value.trim().toLowerCase();
+  const status = $("#leadStatusFilter").value;
   const leads = state.leads.filter((lead) => {
-    const products = leadProducts(lead).map((product) => product.name).join(" ");
-    const text = `${lead.customer_whatsapp} ${lead.customer_message} ${products} ${lead.status}`.toLowerCase();
-    return text.includes(query) && (status === "all" || lead.status === status);
+    const propertyText = leadProperties(lead)
+      .map((property) => `${property.title} ${property.locality} ${property.city}`)
+      .join(" ");
+    const haystack = `${lead.customer_whatsapp} ${lead.customer_message} ${propertyText}`.toLowerCase();
+    return haystack.includes(query) && (status === "all" || lead.status === status);
   });
 
-  if (!state.selectedLeadId || !leads.some((lead) => lead.id === state.selectedLeadId)) {
-    state.selectedLeadId = leads[0]?.id || state.leads[0]?.id || "";
-  }
-
   $("#leadList").innerHTML = leads.length
-    ? leads
-        .map((lead) => {
-          const products = leadProducts(lead);
-          return `
-            <button class="lead-item ${lead.id === state.selectedLeadId ? "active" : ""}" data-lead-id="${escapeHtml(lead.id)}" type="button">
-              <span class="lead-avatar">${escapeHtml(customerInitial(lead.customer_whatsapp))}</span>
-              <span class="lead-item-body">
-                <span class="lead-line">
-                  <strong>+${escapeHtml(maskPhone(lead.customer_whatsapp))}</strong>
-                  <em>${formatTime(lead.created_at)}</em>
-                </span>
-                <small>${escapeHtml(lead.customer_message)}</small>
-                <span class="lead-tags">
-                  <span class="status-chip ${lead.status === "new" ? "" : "warning"}">${escapeHtml(statusLabel(lead.status))}</span>
-                  <span>${products.length || lead.matched_product_names.length} matches</span>
-                </span>
-              </span>
-            </button>
-          `;
-        })
-        .join("")
-    : `<div class="empty-state">No leads match this filter yet.</div>`;
+    ? leads.map(renderLeadItem).join("")
+    : `<div class="empty-state">No leads match this filter.</div>`;
+  if (!leads.some((lead) => lead.id === state.selectedLeadId)) {
+    state.selectedLeadId = leads[0]?.id || "";
+  }
+}
+
+function renderLeadItem(lead) {
+  return `
+    <button class="lead-item ${lead.id === state.selectedLeadId ? "active" : ""}" data-lead-id="${escapeHtml(lead.id)}" type="button">
+      <span class="lead-avatar">${escapeHtml(customerInitial(lead.customer_whatsapp))}</span>
+      <span class="lead-item-body">
+        <span class="lead-line">
+          <strong>+${escapeHtml(maskPhone(lead.customer_whatsapp))}</strong>
+          <em>${formatTime(lead.created_at)}</em>
+        </span>
+        <small>${escapeHtml(lead.customer_message)}</small>
+        <span class="lead-tags">
+          <span>${leadIntentScore(lead)} intent</span>
+          <span>${escapeHtml(statusLabel(lead.intent))}</span>
+        </span>
+      </span>
+    </button>
+  `;
 }
 
 function renderLeadDetail() {
   const lead = state.leads.find((item) => item.id === state.selectedLeadId);
   if (!lead) {
-    $("#leadDetail").innerHTML = `<div class="empty-state">Select a lead to see customer intent, matched products, and reply context.</div>`;
+    $("#leadDetail").innerHTML = `<div class="empty-state">Select a lead to view requirement details.</div>`;
     return;
   }
-
-  const products = leadProducts(lead);
-  const messages = leadMessages(lead).slice(0, 5);
-  const replyText = encodeURIComponent(`Hi, ${products[0]?.name || "selected product"} ke liye aapka size confirm kar dijiye.`);
-  const whatsappUrl = `https://wa.me/${encodeURIComponent(lead.customer_whatsapp)}?text=${replyText}`;
-
+  const properties = leadProperties(lead);
+  const messages = leadMessages(lead);
+  const whatsappUrl = `https://wa.me/${encodeURIComponent(lead.customer_whatsapp)}`;
   $("#leadDetail").innerHTML = `
     <div class="lead-detail-head">
       <div>
@@ -634,8 +659,8 @@ function renderLeadDetail() {
         <strong>${leadIntentScore(lead)} / 100</strong>
       </div>
       <div>
-        <span class="muted-label">Status</span>
-        <strong>${escapeHtml(statusLabel(lead.status))}</strong>
+        <span class="muted-label">Next Step</span>
+        <strong>${escapeHtml(statusLabel(lead.intent))}</strong>
       </div>
       <div>
         <span class="muted-label">Received</span>
@@ -644,10 +669,15 @@ function renderLeadDetail() {
     </div>
 
     <section class="detail-block">
-      <span class="muted-label">AI matched products</span>
-      <div class="lead-product-list">
-        ${renderLeadProducts(products, lead)}
+      <span class="muted-label">AI matched properties</span>
+      <div class="lead-property-list">
+        ${renderLeadProperties(properties, lead)}
       </div>
+    </section>
+
+    <section class="detail-block">
+      <span class="muted-label">Visit / callback CTA</span>
+      <p class="detail-copy">Ask for a preferred time, confirm budget and locality, then schedule the site visit with the broker.</p>
     </section>
 
     <section class="detail-block">
@@ -659,19 +689,19 @@ function renderLeadDetail() {
   `;
 }
 
-function renderLeadProducts(products, lead) {
-  if (!products.length && lead.matched_product_names.length) {
-    return lead.matched_product_names.map((name) => `<div class="lead-product-fallback">${escapeHtml(name)}</div>`).join("");
+function renderLeadProperties(properties, lead) {
+  if (!properties.length && lead.matched_property_names.length) {
+    return lead.matched_property_names.map((name) => `<div class="lead-property-fallback">${escapeHtml(name)}</div>`).join("");
   }
-  if (!products.length) return `<div class="lead-product-fallback">No matched product stored yet.</div>`;
-  return products
+  if (!properties.length) return `<div class="lead-property-fallback">No matched property stored yet.</div>`;
+  return properties
     .map(
-      (product) => `
-        <article class="lead-product">
-          <img src="${escapeHtml(product.image_url || "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=900&q=80")}" alt="${escapeHtml(product.name)}" />
+      (property) => `
+        <article class="lead-property">
+          <img src="${escapeHtml(property.image_url || "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&fit=crop&w=1200&q=80")}" alt="${escapeHtml(property.title)}" />
           <div>
-            <strong>${escapeHtml(product.name)}</strong>
-            <small>${escapeHtml(product.category)} · ${currency.format(product.price)} · ${product.stock} stock</small>
+            <strong>${escapeHtml(property.title)}</strong>
+            <small>${escapeHtml(property.locality)}, ${escapeHtml(property.city)} - ${formatPrice(property)} - ${bhkLabel(property)}</small>
           </div>
         </article>
       `,
@@ -719,7 +749,7 @@ function drawChart() {
   });
 
   const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
-  gradient.addColorStop(0, "rgba(14, 124, 102, 0.28)");
+  gradient.addColorStop(0, "rgba(14, 124, 102, 0.22)");
   gradient.addColorStop(1, "rgba(14, 124, 102, 0)");
 
   ctx.beginPath();
@@ -765,23 +795,26 @@ function switchPanel(panel) {
   if (panel === "leads") renderLeadInbox();
 }
 
-function uniqueCategories() {
-  return [...new Set(state.products.map((product) => product.category).filter(Boolean))].sort();
+function formatPrice(property) {
+  const price = currency.format(property.price);
+  return property.listing_type === "rent" ? `${price}/mo` : price;
 }
 
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function formatCompactMoney(value) {
+  const amount = Number(value || 0);
+  if (amount >= 10000000) return `${(amount / 10000000).toFixed(2)}Cr`;
+  if (amount >= 100000) return `${(amount / 100000).toFixed(2)}L`;
+  return amount.toLocaleString("en-IN");
 }
 
-function leadProducts(lead) {
-  const ids = new Set(lead.matched_product_ids);
-  const names = new Set(lead.matched_product_names.map((name) => name.toLowerCase()));
-  return state.products.filter((product) => ids.has(product.id) || names.has(product.name.toLowerCase()));
+function bhkLabel(property) {
+  return Number(property.bhk || 0) > 0 ? `${property.bhk}BHK` : property.property_type || "Studio";
+}
+
+function leadProperties(lead) {
+  const ids = new Set(lead.matched_property_ids);
+  const names = new Set(lead.matched_property_names.map((name) => name.toLowerCase()));
+  return state.properties.filter((property) => ids.has(property.id) || names.has(property.title.toLowerCase()));
 }
 
 function leadMessages(lead) {
@@ -791,10 +824,10 @@ function leadMessages(lead) {
 }
 
 function leadIntentScore(lead) {
-  const text = `${lead.customer_message} ${lead.status}`.toLowerCase();
+  const text = `${lead.customer_message} ${lead.intent} ${lead.status}`.toLowerCase();
   let score = 42;
-  if (/(buy|order|book|chahiye|chaiye|available|confirm|price|rate|cost)/i.test(text)) score += 28;
-  if (leadProducts(lead).length || lead.matched_product_names.length) score += 18;
+  if (/(visit|site visit|call|callback|book|shortlist|chahiye|available|confirm|price|budget|rent|sale|buy)/i.test(text)) score += 30;
+  if (leadProperties(lead).length || lead.matched_property_names.length) score += 18;
   if (lead.status === "new") score += 8;
   if (lead.status === "closed") score -= 30;
   return Math.max(0, Math.min(score, 100));
@@ -807,7 +840,7 @@ function customerInitial(phone) {
 function maskPhone(phone) {
   const digits = String(phone || "").replace(/\D/g, "");
   if (digits.length <= 4) return digits || "customer";
-  return `${digits.slice(0, 2)}••••${digits.slice(-4)}`;
+  return `${digits.slice(0, 2)}....${digits.slice(-4)}`;
 }
 
 function statusLabel(status) {
@@ -827,6 +860,12 @@ function formatTime(value) {
   }).format(date);
 }
 
+function isToday(value) {
+  const date = new Date(value);
+  const now = new Date();
+  return date.toDateString() === now.toDateString();
+}
+
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -836,13 +875,13 @@ function readFileAsDataUrl(file) {
   });
 }
 
-async function uploadProductImage(file) {
+async function uploadPropertyImage(file) {
   if (!file || !file.size) return "";
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
     throw new Error("Unsupported image type");
   }
   const dataUrl = await readFileAsDataUrl(file);
-  const response = await fetch("/api/product-images", {
+  const response = await fetch("/api/property-images", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -858,9 +897,7 @@ async function uploadProductImage(file) {
 function resetImagePreview() {
   const preview = $("#imagePreview");
   const image = $("#imagePreviewImg");
-  if (image.dataset.previewUrl) {
-    URL.revokeObjectURL(image.dataset.previewUrl);
-  }
+  if (image.dataset.previewUrl) URL.revokeObjectURL(image.dataset.previewUrl);
   image.removeAttribute("src");
   image.dataset.previewUrl = "";
   $("#imagePreviewName").textContent = "";
@@ -878,38 +915,43 @@ function updateImagePreview(file) {
   $("#imagePreview").hidden = false;
 }
 
-function openProductDialog(product = null) {
-  const form = $("#productForm");
-  const isEdit = Boolean(product);
+function openPropertyDialog(property = null) {
+  const form = $("#propertyForm");
+  const isEdit = Boolean(property);
   form.reset();
   resetImagePreview();
-  form.elements.id.value = product?.id || "";
-  form.elements.existing_image_url.value = product?.image_url || "";
-  form.elements.name.value = product?.name || "";
-  form.elements.description.value = product?.description || "";
-  form.elements.category.value = product?.category || "";
-  form.elements.price.value = product?.price || "";
-  form.elements.stock.value = product?.stock || "";
-  form.elements.sizes.value = product?.sizes?.join(", ") || "";
-  form.elements.colors.value = product?.colors?.join(", ") || "";
-  $("#productDialogTitle").textContent = isEdit ? "Edit product" : "Add product";
-  $("#saveProductButton").textContent = isEdit ? "Save changes" : "Publish listing";
-  $("#deleteProductButton").hidden = !isEdit;
-  $("#pauseProductButton").hidden = !isEdit;
-  $("#pauseProductButton").textContent = product?.status === "paused" ? "Resume" : "Pause";
-  $("#productDialog").showModal();
+  form.elements.id.value = property?.id || "";
+  form.elements.existing_image_url.value = property?.image_url || "";
+  form.elements.title.value = property?.title || "";
+  form.elements.description.value = property?.description || "";
+  form.elements.listing_type.value = property?.listing_type || "rent";
+  form.elements.property_type.value = property?.property_type || "";
+  form.elements.locality.value = property?.locality || "";
+  form.elements.city.value = property?.city || "";
+  form.elements.price.value = property?.price || "";
+  form.elements.bhk.value = property?.bhk ?? "";
+  form.elements.area_sqft.value = property?.area_sqft || "";
+  form.elements.furnishing.value = property?.furnishing || "";
+  form.elements.availability.value = property?.availability || "";
+  form.elements.amenities.value = property?.amenities?.join(", ") || "";
+  $("#propertyDialogTitle").textContent = isEdit ? "Edit property" : "Add property";
+  $("#savePropertyButton").textContent = isEdit ? "Save changes" : "Publish property";
+  $("#deletePropertyButton").hidden = !isEdit;
+  $("#pausePropertyButton").hidden = !isEdit;
+  $("#pausePropertyButton").textContent = property?.status === "paused" ? "Resume" : "Pause";
+  $("#propertyDialog").showModal();
 }
 
-function closeProductDialog() {
-  const productDialog = $("#productDialog");
-  $("#productForm").reset();
+function closePropertyDialog() {
+  const propertyDialog = $("#propertyDialog");
+  $("#propertyForm").reset();
   resetImagePreview();
-  $("#deleteProductButton").hidden = true;
-  $("#pauseProductButton").hidden = true;
-  if (productDialog.open) productDialog.close();
+  $("#deletePropertyButton").hidden = true;
+  $("#pausePropertyButton").hidden = true;
+  if (propertyDialog.open) propertyDialog.close();
 }
 
-async function handleProductSubmit(event) {
+async function handlePropertySubmit(event) {
   if (event.submitter?.value === "cancel") {
     resetImagePreview();
     return;
@@ -918,78 +960,83 @@ async function handleProductSubmit(event) {
   const form = event.currentTarget;
   const formData = new FormData(form);
   const imageFile = formData.get("image_file");
-  const productId = formData.get("id");
+  const propertyId = formData.get("id");
   const existingImageUrl = formData.get("existing_image_url");
-  const existingProduct = state.products.find((product) => product.id === productId);
+  const existingProperty = state.properties.find((property) => property.id === propertyId);
   let imageUrl = "";
 
   try {
-    imageUrl = await uploadProductImage(imageFile);
-  } catch (error) {
-    alert("Image upload nahi ho paayi. JPG, PNG ya WebP file select karo.");
+    imageUrl = await uploadPropertyImage(imageFile);
+  } catch {
+    alert("Property image upload nahi ho paayi. JPG, PNG ya WebP file select karo.");
     return;
   }
 
-  const product = normalizeProduct({
+  const property = normalizeProperty({
     id: crypto.randomUUID(),
-    name: formData.get("name"),
+    title: formData.get("title"),
     description: formData.get("description"),
-    category: formData.get("category"),
+    listing_type: formData.get("listing_type"),
+    property_type: formData.get("property_type"),
+    locality: formData.get("locality"),
+    city: formData.get("city"),
     price: formData.get("price"),
-    stock: formData.get("stock"),
-    sizes: splitList(formData.get("sizes")),
-    colors: splitList(formData.get("colors")),
+    bhk: formData.get("bhk"),
+    area_sqft: formData.get("area_sqft"),
+    furnishing: formData.get("furnishing"),
+    availability: formData.get("availability"),
+    amenities: splitList(formData.get("amenities")),
     image_url: imageUrl || existingImageUrl,
-    status: existingProduct?.status || "active",
-    inquiries: existingProduct?.inquiries ?? Math.floor(Math.random() * 12) + 3,
-    orders: existingProduct?.orders ?? Math.floor(Math.random() * 4),
+    status: existingProperty?.status || "active",
+    inquiries: existingProperty?.inquiries ?? Math.floor(Math.random() * 12) + 3,
+    visits: existingProperty?.visits ?? Math.floor(Math.random() * 4),
   });
 
   try {
-    if (productId) {
-      const updated = await updateSupabaseProduct({ ...product, id: productId });
-      state.products = state.products.map((item) => (item.id === productId ? updated : item));
+    if (propertyId) {
+      const updated = await updateSupabaseProperty({ ...property, id: propertyId });
+      state.properties = state.properties.map((item) => (item.id === propertyId ? updated : item));
     } else {
-      const inserted = await insertSupabaseProduct(product);
-      state.products.unshift(inserted);
+      const inserted = await insertSupabaseProperty(property);
+      state.properties.unshift(inserted);
     }
-    await fetchSupabaseProducts();
-  } catch (error) {
-    alert("Product save nahi hua. Supabase ya API issue check karo.");
+    await fetchSupabaseProperties();
+  } catch {
+    alert("Property save nahi hua. Supabase ya API issue check karo.");
     return;
   }
 
-  closeProductDialog();
+  closePropertyDialog();
   renderAll();
   switchPanel("inventory");
 }
 
-async function handleDeleteProduct(productId) {
-  const product = state.products.find((item) => item.id === productId);
-  if (!product) return;
-  const confirmed = confirm(`Delete ${product.name}? Ye product WhatsApp AI recommendations se bhi hat jayega.`);
+async function handleDeleteProperty(propertyId) {
+  const property = state.properties.find((item) => item.id === propertyId);
+  if (!property) return;
+  const confirmed = confirm(`Delete ${property.title}? Ye property WhatsApp AI recommendations se bhi hat jayegi.`);
   if (!confirmed) return;
   try {
-    await deleteSupabaseProduct(productId);
-    state.products = state.products.filter((item) => item.id !== productId);
-    closeProductDialog();
+    await deleteSupabaseProperty(propertyId);
+    state.properties = state.properties.filter((item) => item.id !== propertyId);
+    closePropertyDialog();
     renderAll();
   } catch {
-    alert("Product delete nahi hua. API ya Supabase issue check karo.");
+    alert("Property delete nahi hui. API ya Supabase issue check karo.");
   }
 }
 
-async function handlePauseProduct(productId) {
-  const product = state.products.find((item) => item.id === productId);
-  if (!product) return;
-  const nextStatus = product.status === "paused" ? "active" : "paused";
+async function handlePauseProperty(propertyId) {
+  const property = state.properties.find((item) => item.id === propertyId);
+  if (!property) return;
+  const nextStatus = property.status === "paused" ? "active" : "paused";
   try {
-    const updated = await updateSupabaseProduct({ ...product, status: nextStatus });
-    state.products = state.products.map((item) => (item.id === productId ? updated : item));
-    closeProductDialog();
+    const updated = await updateSupabaseProperty({ ...property, status: nextStatus });
+    state.properties = state.properties.map((item) => (item.id === propertyId ? updated : item));
+    closePropertyDialog();
     renderAll();
   } catch {
-    alert("Product status update nahi hua.");
+    alert("Property status update nahi hua.");
   }
 }
 
@@ -1000,57 +1047,102 @@ function updateSyncButton(message) {
   syncButton.classList.toggle("connected", hasSupabaseConfig());
 }
 
+function parseMoneyValue(rawNumber, suffix = "") {
+  const value = Number(String(rawNumber || "").replace(/,/g, ""));
+  if (!Number.isFinite(value)) return 0;
+  const normalizedSuffix = suffix.toLowerCase();
+  if (normalizedSuffix === "k") return value * 1000;
+  if (["l", "lac", "lakh", "lakhs"].includes(normalizedSuffix)) return value * 100000;
+  if (["cr", "crore", "crores"].includes(normalizedSuffix)) return value * 10000000;
+  return value;
+}
+
+function extractBudget(query) {
+  const match = query.match(/(?:under|below|less than|budget|upto|up to|rs\.?|inr|rent|price|sale)\s*(\d+(?:\.\d+)?)\s*(k|l|lac|lakh|lakhs|cr|crore|crores)?\b/i);
+  if (match) return parseMoneyValue(match[1], match[2]);
+  const suffixed = query.match(/\b(\d+(?:\.\d+)?)\s*(k|l|lac|lakh|lakhs|cr|crore|crores)\b/i);
+  return suffixed ? parseMoneyValue(suffixed[1], suffixed[2]) : 0;
+}
+
+function extractListingType(query) {
+  if (/\b(rent|rental|lease|kiraya|tenant)\b/i.test(query)) return "rent";
+  if (/\b(sale|buy|purchase|kharid|resale)\b/i.test(query)) return "sale";
+  return "";
+}
+
+function extractBhk(query) {
+  const match = query.match(/\b([1-9])\s*(?:bhk|bed|bedroom|br)\b/i);
+  return match ? Number(match[1]) : 0;
+}
+
 function findMatches(query) {
-  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-  const budget = Number(query.match(/(?:under|below|less than|₹|rs\.?)\s*(\d+)/i)?.[1] || 0);
-  return state.products
-    .map((product) => {
+  const terms = query
+    .toLowerCase()
+    .replace(/[^a-z0-9\s.-]/g, " ")
+    .split(/\s+/)
+    .filter((term) => term.length > 1 && !["flat", "property", "rent", "sale", "buy", "under", "budget", "bhk"].includes(term));
+  const budget = extractBudget(query);
+  const listingType = extractListingType(query);
+  const bhk = extractBhk(query);
+
+  return state.properties
+    .filter((property) => !listingType || property.listing_type === listingType)
+    .map((property) => {
       const text = [
-        product.name,
-        product.category,
-        product.colors.join(" "),
-        product.sizes.join(" "),
+        property.title,
+        property.description,
+        property.listing_type,
+        property.property_type,
+        property.locality,
+        property.city,
+        property.furnishing,
+        property.availability,
+        property.amenities.join(" "),
       ]
         .join(" ")
         .toLowerCase();
-      const keywordScore = terms.reduce((score, term) => score + (text.includes(term) ? 14 : 0), 0);
-      const budgetScore = budget && product.price <= budget ? 18 : 0;
-      const demandScore = Math.min(product.inquiries, 35);
-      const stockScore = product.stock > 0 ? 10 : -30;
-      return { product, score: keywordScore + budgetScore + demandScore + stockScore };
+      const keywordScore = terms.reduce((score, term) => score + (text.includes(term) ? 12 : 0), 0);
+      const budgetScore = budget && property.price <= budget ? 24 : 0;
+      const bhkScore = bhk && property.bhk === bhk ? 22 : 0;
+      const typeScore = listingType ? 18 : 0;
+      const demandScore = Math.min(property.inquiries, 20);
+      return { property, score: keywordScore + budgetScore + bhkScore + typeScore + demandScore };
     })
+    .filter(({ score }) => score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, 4);
 }
 
 function renderChat(query, matches) {
   $("#chatWindow").innerHTML = `
-    <div class="message ai">Hi, bolo customer ko kya chahiye? Main live inventory se best pieces nikal dunga.</div>
+    <div class="message ai">Hi, customer ki requirement bhejo. Main locality, budget, rent/sale, BHK aur availability ke basis pe best properties nikal dunga.</div>
     <div class="message user">${escapeHtml(query)}</div>
-    <div class="message ai">Top ${matches.length} options mil gaye. Budget, color, size aur demand score ke basis pe rank kiya hai.</div>
+    <div class="message ai">Top ${matches.length} property options mil gaye. Best match ke saath callback/site visit CTA ready hai.</div>
   `;
 }
 
 function renderMatches(matches) {
-  $("#matchResults").innerHTML = matches
-    .map(
-      ({ product, score }) => `
+  $("#matchResults").innerHTML = matches.length
+    ? matches
+        .map(
+          ({ property, score }) => `
       <article class="match-card">
-        <img src="${escapeHtml(product.image_url || "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=900&q=80")}" alt="${escapeHtml(product.name)}" />
+        <img src="${escapeHtml(property.image_url || "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&fit=crop&w=1200&q=80")}" alt="${escapeHtml(property.title)}" />
         <div>
-          <strong>${escapeHtml(product.name)}</strong>
-          <small>${escapeHtml(product.category)} · ${currency.format(product.price)} · ${product.stock} stock</small>
+          <strong>${escapeHtml(property.title)}</strong>
+          <small>${escapeHtml(property.locality)}, ${escapeHtml(property.city)} - ${formatPrice(property)} - ${bhkLabel(property)} - ${Number(property.area_sqft || 0).toLocaleString("en-IN")} sq ft</small>
           <p class="match-score">${Math.max(score, 0)} match score</p>
         </div>
       </article>
     `,
-    )
-    .join("");
+        )
+        .join("")
+    : `<div class="empty-state">No matching property found. Try adding locality, budget, BHK, and rent/sale intent.</div>`;
 }
 
 function handleMatchSubmit(event) {
   event.preventDefault();
-  const query = $("#matchQuery").value.trim() || "black party shirt under 1500 in L size";
+  const query = $("#matchQuery").value.trim() || "2BHK furnished flat rent in Andheri under 50k";
   const matches = findMatches(query);
   renderChat(query, matches);
   renderMatches(matches);
@@ -1064,73 +1156,63 @@ function bindEvents() {
     button.addEventListener("click", () => switchPanel(button.dataset.panelShortcut));
   });
   $$("[data-open-listing]").forEach((button) => {
-    button.addEventListener("click", () => openProductDialog());
+    button.addEventListener("click", () => openPropertyDialog());
   });
   $("#healthList").addEventListener("click", (event) => {
-    if (event.target.closest("[data-open-listing]")) {
-      openProductDialog();
-    }
+    if (event.target.closest("[data-open-listing]")) openPropertyDialog();
   });
-  $("#productForm").addEventListener("submit", handleProductSubmit);
-  $("#productDialog").addEventListener("close", () => {
-    if (!$("#productDialog").returnValue) return;
+  $("#propertyForm").addEventListener("submit", handlePropertySubmit);
+  $("#propertyDialog").addEventListener("close", () => {
+    if (!$("#propertyDialog").returnValue) return;
     resetImagePreview();
   });
-  $("#productImageInput").addEventListener("change", (event) => {
+  $("#propertyImageInput").addEventListener("change", (event) => {
     updateImagePreview(event.currentTarget.files?.[0]);
   });
   $("#searchInput").addEventListener("input", () => {
     state.inventoryPage = 1;
-    renderProducts();
+    renderProperties();
   });
-  $("#categoryFilter").addEventListener("change", () => {
+  $("#typeFilter").addEventListener("change", () => {
     state.inventoryPage = 1;
-    renderProducts();
+    renderProperties();
   });
-  $("#stockFilterButton").addEventListener("click", () => {
-    state.lowStockOnly = !state.lowStockOnly;
+  $("#visitFilterButton").addEventListener("click", () => {
+    state.needsVisitOnly = !state.needsVisitOnly;
     state.inventoryPage = 1;
-    $("#stockFilterButton").classList.toggle("active", state.lowStockOnly);
-    renderProducts();
+    $("#visitFilterButton").classList.toggle("active", state.needsVisitOnly);
+    renderProperties();
   });
   $("#pageSizeSelect").addEventListener("change", (event) => {
     state.inventoryPageSize = Number(event.currentTarget.value);
     state.inventoryPage = 1;
-    renderProducts();
+    renderProperties();
   });
-  $("#productPager").addEventListener("click", (event) => {
+  $("#propertyPager").addEventListener("click", (event) => {
     const button = event.target.closest("button");
     if (!button) return;
     const page = button.dataset.page ? Number(button.dataset.page) : state.inventoryPage + Number(button.dataset.pageStep || 0);
     if (!Number.isFinite(page)) return;
     state.inventoryPage = Math.max(1, page);
-    renderProducts();
+    renderProperties();
   });
-  $("#productGrid").addEventListener("click", (event) => {
-    const favoriteButton = event.target.closest(".favorite-button");
-    if (favoriteButton) {
-      favoriteButton.classList.toggle("active");
-      favoriteButton.textContent = favoriteButton.classList.contains("active") ? "♥" : "♡";
-      return;
-    }
-    const editButton = event.target.closest("[data-edit-product]");
+  $("#propertyGrid").addEventListener("click", (event) => {
+    const editButton = event.target.closest("[data-edit-property]");
     if (editButton) {
-      const product = state.products.find((item) => item.id === editButton.dataset.editProduct);
-      if (product) openProductDialog(product);
+      const property = state.properties.find((item) => item.id === editButton.dataset.editProperty);
+      if (property) openPropertyDialog(property);
       return;
     }
-    const deleteButton = event.target.closest("[data-delete-product]");
-    if (deleteButton) {
-      handleDeleteProduct(deleteButton.dataset.deleteProduct);
-    }
+    const deleteButton = event.target.closest("[data-delete-property]");
+    if (deleteButton) handleDeleteProperty(deleteButton.dataset.deleteProperty);
   });
-  $("#deleteProductButton").addEventListener("click", () => {
-    const productId = $("#productForm").elements.id.value;
-    if (productId) handleDeleteProduct(productId);
+  $("#deletePropertyButton").addEventListener("click", () => {
+    const propertyId = $("#propertyForm").elements.id.value;
+    if (propertyId) handleDeleteProperty(propertyId);
   });
-  $("#pauseProductButton").addEventListener("click", () => {
-    const productId = $("#productForm").elements.id.value;
-    if (productId) handlePauseProduct(productId);
+  $("#pausePropertyButton").addEventListener("click", () => {
+    const propertyId = $("#propertyForm").elements.id.value;
+    if (propertyId) handlePauseProperty(propertyId);
   });
   $("#leadSearchInput").addEventListener("input", renderLeadInbox);
   $("#leadStatusFilter").addEventListener("change", renderLeadInbox);
@@ -1150,28 +1232,38 @@ function bindEvents() {
   $("#matchForm").addEventListener("submit", handleMatchSubmit);
   $("#syncButton").addEventListener("click", async () => {
     try {
-      await fetchSupabaseProducts();
+      await fetchSupabaseProperties();
       await fetchLeads();
       updateSyncButton("Synced with Supabase");
       renderAll();
-    } catch (error) {
+    } catch {
       updateSyncButton("Sync failed");
     }
   });
   window.addEventListener("resize", drawChart);
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function init() {
   loadLocalState();
   bindEvents();
   fetchDefaultShopId()
-    .then(fetchSupabaseProducts)
+    .then(fetchSupabaseProperties)
     .then(fetchLeads)
     .catch(() => updateSyncButton("Supabase sync failed"))
     .finally(() => {
       renderAll();
-      renderChat("black party shirt under 1500 in L size", findMatches("black party shirt under 1500 in L size"));
-      renderMatches(findMatches("black party shirt under 1500 in L size"));
+      const defaultQuery = "2BHK furnished flat rent in Andheri under 50k";
+      renderChat(defaultQuery, findMatches(defaultQuery));
+      renderMatches(findMatches(defaultQuery));
     });
 }
 

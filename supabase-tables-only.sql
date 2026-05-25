@@ -6,24 +6,29 @@ create table if not exists shops (
   slug text not null unique,
   owner_name text,
   owner_whatsapp text,
-  tone text default 'friendly, confident, helpful',
+  tone text default 'friendly, practical, trusted real estate broker',
   created_at timestamptz default now()
 );
 
-create table if not exists products (
+create table if not exists properties (
   id uuid primary key default gen_random_uuid(),
   shop_id uuid references shops(id),
-  name text not null,
+  title text not null,
   description text,
-  category text not null,
+  listing_type text not null check (listing_type in ('rent', 'sale')),
+  property_type text not null default 'Apartment',
+  locality text not null,
+  city text not null,
   price numeric not null,
-  stock int not null default 0,
-  sizes text[] default '{}',
-  colors text[] default '{}',
+  bhk numeric not null default 0,
+  area_sqft numeric not null default 0,
+  furnishing text,
+  availability text,
+  amenities text[] default '{}',
   image_url text,
   status text not null default 'active',
   inquiries int not null default 0,
-  orders int not null default 0,
+  visits int not null default 0,
   created_at timestamptz default now()
 );
 
@@ -32,7 +37,8 @@ create table if not exists leads (
   shop_id uuid references shops(id),
   customer_whatsapp text not null,
   customer_message text not null,
-  matched_product_ids uuid[] default '{}',
+  matched_property_ids uuid[] default '{}',
+  intent text default 'site_visit',
   status text not null default 'new',
   created_at timestamptz default now()
 );
@@ -48,7 +54,7 @@ create table if not exists whatsapp_messages (
 );
 
 insert into shops (name, slug, owner_name, owner_whatsapp, tone)
-values ('Raj Fashion', 'raj-fashion', 'Raj Fashion Owner', null, 'friendly, confident, local fashion salesman')
+values ('EstateIQ Demo Realty', 'estateiq-demo-realty', 'EstateIQ Broker', null, 'friendly, practical, trusted real estate broker')
 on conflict (slug) do update set
   name = excluded.name,
   owner_name = excluded.owner_name,

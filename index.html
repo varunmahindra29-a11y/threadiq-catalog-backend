@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ThreadIQ Retail Console</title>
+    <title>EstateIQ Broker Console</title>
     <link rel="preconnect" href="https://images.unsplash.com" />
     <link rel="stylesheet" href="./src/styles.css" />
   </head>
@@ -11,28 +11,28 @@
     <div id="app">
       <aside class="sidebar" aria-label="Primary navigation">
         <div class="brand">
-          <span class="brand-mark">TQ</span>
+          <span class="brand-mark">EQ</span>
           <div>
-            <strong>ThreadIQ</strong>
-            <span>Retail AI Console</span>
+            <strong>EstateIQ</strong>
+            <span>Real Estate AI</span>
           </div>
         </div>
 
         <nav class="nav-stack">
           <button class="nav-item active" data-panel="dashboard" type="button">
-            <span class="nav-icon">⌂</span>
+            <span class="nav-icon">D</span>
             <span>Dashboard</span>
           </button>
           <button class="nav-item" data-panel="inventory" type="button">
-            <span class="nav-icon">▣</span>
-            <span>Listings</span>
+            <span class="nav-icon">P</span>
+            <span>Properties</span>
           </button>
           <button class="nav-item" data-panel="leads" type="button">
-            <span class="nav-icon">◌</span>
+            <span class="nav-icon">L</span>
             <span>Leads</span>
           </button>
           <button class="nav-item" data-panel="assistant" type="button">
-            <span class="nav-icon">✦</span>
+            <span class="nav-icon">AI</span>
             <span>AI Matches</span>
           </button>
         </nav>
@@ -40,15 +40,15 @@
         <div class="sidebar-card">
           <span class="muted-label">Today</span>
           <strong id="todayLeads">0 leads</strong>
-          <p>WhatsApp shoppers asking for style, budget, and size-based suggestions.</p>
-          <button class="sidebar-card-action" data-panel-shortcut="leads" type="button">View all leads →</button>
+          <p>WhatsApp buyers and tenants asking for locality, budget, BHK, and visit timing.</p>
+          <button class="sidebar-card-action" data-panel-shortcut="leads" type="button">View lead inbox</button>
         </div>
 
         <div class="sidebar-user">
-          <span>VK</span>
+          <span>EB</span>
           <div>
-            <strong>Varun Kumar</strong>
-            <small>Shop Owner</small>
+            <strong>EstateIQ Broker</strong>
+            <small>Demo Realty</small>
           </div>
         </div>
       </aside>
@@ -56,54 +56,50 @@
       <main class="workspace">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Welcome back, Varun</p>
-            <h1>Command Center</h1>
-            <p class="topbar-copy">Track product demand, WhatsApp leads, and listing performance.</p>
+            <p class="eyebrow">Welcome back, broker</p>
+            <h1>Broker Command Center</h1>
+            <p class="topbar-copy">Track property demand, WhatsApp leads, site visits, and AI-ranked matches.</p>
           </div>
           <div class="topbar-actions">
             <span class="sync-pill"><span></span>Live WhatsApp Sync</span>
-            <button class="ghost-button refresh-button" id="syncButton" type="button" aria-label="Refresh dashboard" title="Refresh dashboard">↻ Refresh</button>
-            <button class="primary-button add-button" data-open-listing type="button">+ Add Product</button>
+            <button class="ghost-button refresh-button" id="syncButton" type="button" aria-label="Refresh dashboard" title="Refresh dashboard">Refresh</button>
+            <button class="primary-button add-button" data-open-listing type="button">Add Property</button>
           </div>
         </header>
 
         <section class="panel active" id="dashboardPanel">
           <div class="stats-grid">
             <article class="metric-card revenue">
-              <div class="metric-icon">₹</div>
+              <div class="metric-icon">Rs</div>
               <div>
-                <span class="muted-label">Revenue Tracked</span>
-                <strong id="metricRevenue">₹0</strong>
-                <small><b>↑ 12%</b> vs last 7 days</small>
+                <span class="muted-label">Pipeline Value</span>
+                <strong id="metricPipeline">Rs 0</strong>
+                <small><b>Live</b> sale value plus annual rent</small>
               </div>
-              <svg class="sparkline" viewBox="0 0 120 40" aria-hidden="true"><path d="M2 32 L18 32 L32 24 L46 28 L62 18 L78 22 L96 8 L112 16" /></svg>
             </article>
-            <article class="metric-card products">
-              <div class="metric-icon">▣</div>
+            <article class="metric-card properties">
+              <div class="metric-icon">P</div>
               <div>
-                <span class="muted-label">Active Products</span>
-                <strong id="metricProducts">0</strong>
-                <small><b>↑ 8%</b> vs last 7 days</small>
+                <span class="muted-label">Active Properties</span>
+                <strong id="metricProperties">0</strong>
+                <small><b id="rentSaleSplit">0 rent / 0 sale</b></small>
               </div>
-              <svg class="sparkline blue" viewBox="0 0 120 40" aria-hidden="true"><path d="M2 34 L18 34 L34 24 L50 30 L66 20 L82 26 L100 12 L116 8" /></svg>
             </article>
             <article class="metric-card conversion">
-              <div class="metric-icon">↗</div>
+              <div class="metric-icon">%</div>
               <div>
-                <span class="muted-label">Conversion Rate</span>
+                <span class="muted-label">Visit Conversion</span>
                 <strong id="metricConversion">0%</strong>
-                <small><b>↑ 5%</b> vs last 7 days</small>
+                <small><b>Visits</b> from WhatsApp inquiries</small>
               </div>
-              <svg class="sparkline" viewBox="0 0 120 40" aria-hidden="true"><path d="M2 33 L18 26 L34 30 L52 20 L68 25 L84 14 L100 19 L116 10" /></svg>
             </article>
-            <article class="metric-card stock">
-              <div class="metric-icon">□</div>
+            <article class="metric-card visits">
+              <div class="metric-icon">V</div>
               <div>
-                <span class="muted-label">Low Stock</span>
-                <strong id="metricLowStock">0</strong>
-                <small><b class="down">↓ 2</b> vs last 7 days</small>
+                <span class="muted-label">Site Visits</span>
+                <strong id="metricVisits">0</strong>
+                <small><b>Scheduled</b> across active listings</small>
               </div>
-              <svg class="sparkline orange" viewBox="0 0 120 40" aria-hidden="true"><path d="M2 34 L18 24 L34 30 L50 25 L66 20 L82 26 L100 12 L116 18" /></svg>
             </article>
           </div>
 
@@ -120,29 +116,29 @@
                   <option value="30">30 days</option>
                 </select>
               </div>
-              <p class="chart-note">↗ Demand is up <strong>18%</strong> this week</p>
+              <p class="chart-note">High-intent leads are asking for callbacks and site visits.</p>
               <canvas id="leadsChart" width="860" height="320" aria-label="Lead analytics chart"></canvas>
             </section>
 
             <section class="focus-panel">
               <div class="section-heading">
                 <div>
-                  <h2>Customer Demand</h2>
-                  <span class="muted-label">Top categories customers ask for</span>
+                  <h2>Locality Demand</h2>
+                  <span class="muted-label">Top areas customers ask for</span>
                 </div>
               </div>
               <div id="categoryBars" class="bar-list"></div>
-              <button class="ghost-button view-categories" data-panel-shortcut="inventory" type="button">View all categories →</button>
+              <button class="ghost-button view-categories" data-panel-shortcut="inventory" type="button">View properties</button>
             </section>
           </div>
 
           <section class="table-panel">
             <div class="section-heading">
               <div>
-                <h2>Listing Health</h2>
-                <span class="muted-label">Action queue to improve your listings</span>
+                <h2>Property Health</h2>
+                <span class="muted-label">Action queue for better broker follow-up</span>
               </div>
-              <button class="ghost-button" data-panel-shortcut="inventory" type="button">View all issues →</button>
+              <button class="ghost-button" data-panel-shortcut="inventory" type="button">View all</button>
             </div>
             <div id="healthList" class="health-list"></div>
           </section>
@@ -162,21 +158,23 @@
         <section class="panel" id="inventoryPanel">
           <div class="catalog-toolbar">
             <div class="catalog-search">
-              <span>⌕</span>
-              <input id="searchInput" type="search" placeholder="Search products, color, size, category..." />
+              <span>Search</span>
+              <input id="searchInput" type="search" placeholder="Search property, locality, city, BHK, amenities..." />
             </div>
-            <select id="categoryFilter" aria-label="Category filter">
-              <option value="all">All categories</option>
+            <select id="typeFilter" aria-label="Listing type filter">
+              <option value="all">All types</option>
+              <option value="rent">Rent</option>
+              <option value="sale">Sale</option>
             </select>
-            <button class="filter-button" id="stockFilterButton" type="button">▽ Low stock</button>
+            <button class="filter-button" id="visitFilterButton" type="button">Needs visits</button>
           </div>
 
-          <div id="productGrid" class="product-grid"></div>
+          <div id="propertyGrid" class="property-grid"></div>
 
           <div class="catalog-footer">
-            <span id="listingCount">Showing products</span>
-            <div class="catalog-pager" id="productPager"></div>
-            <select id="pageSizeSelect" aria-label="Products per page">
+            <span id="listingCount">Showing properties</span>
+            <div class="catalog-pager" id="propertyPager"></div>
+            <select id="pageSizeSelect" aria-label="Properties per page">
               <option value="8">8 per page</option>
               <option value="12">12 per page</option>
               <option value="16">16 per page</option>
@@ -188,7 +186,7 @@
           <div class="lead-hero">
             <div>
               <p class="eyebrow">WhatsApp lead inbox</p>
-              <h2>Know who wants what before you reply</h2>
+              <h2>Know the requirement before you call back</h2>
             </div>
             <div class="lead-hero-metrics">
               <div>
@@ -208,8 +206,8 @@
 
           <div class="lead-toolbar">
             <div class="search-box">
-              <span>⌕</span>
-              <input id="leadSearchInput" type="search" placeholder="Search customer, product, message" />
+              <span>Search</span>
+              <input id="leadSearchInput" type="search" placeholder="Search customer, locality, requirement" />
             </div>
             <select id="leadStatusFilter" aria-label="Lead status filter">
               <option value="all">All leads</option>
@@ -235,12 +233,12 @@
               <div class="section-heading">
                 <div>
                   <span class="muted-label">WhatsApp AI preview</span>
-                  <h2>Customer request simulator</h2>
+                  <h2>Requirement simulator</h2>
                 </div>
               </div>
               <div class="chat-window" id="chatWindow"></div>
               <form id="matchForm" class="match-form">
-                <input id="matchQuery" type="text" placeholder="Example: black party shirt under 1500 in L size" />
+                <input id="matchQuery" type="text" placeholder="Example: 2BHK furnished flat rent in Andheri under 50k" />
                 <button class="primary-button" type="submit">Find matches</button>
               </form>
             </section>
@@ -248,7 +246,7 @@
             <section class="match-panel">
               <div class="section-heading">
                 <div>
-                  <span class="muted-label">Recommended products</span>
+                  <span class="muted-label">Recommended properties</span>
                   <h2>AI-ranked matches</h2>
                 </div>
               </div>
@@ -256,18 +254,17 @@
             </section>
           </div>
         </section>
-
       </main>
     </div>
 
-    <dialog id="productDialog">
-      <form id="productForm" class="product-form">
+    <dialog id="propertyDialog">
+      <form id="propertyForm" class="property-form">
         <div class="dialog-head">
           <div>
-            <span class="muted-label">Inventory listing</span>
-            <h2 id="productDialogTitle">Add product</h2>
+            <span class="muted-label">Property listing</span>
+            <h2 id="propertyDialogTitle">Add property</h2>
           </div>
-          <button class="icon-button" value="cancel" formmethod="dialog" type="submit" aria-label="Close">×</button>
+          <button class="icon-button" value="cancel" formmethod="dialog" type="submit" aria-label="Close">x</button>
         </div>
 
         <input name="id" type="hidden" />
@@ -275,48 +272,71 @@
 
         <div class="form-grid">
           <label>
-            Product name
-            <input name="name" required placeholder="Oversized black shirt" />
+            Property title
+            <input name="title" required placeholder="Furnished 2BHK near Andheri West Metro" />
           </label>
           <label>
-            Category
-            <input name="category" required placeholder="Shirts" />
+            Listing type
+            <select name="listing_type" required>
+              <option value="rent">Rent</option>
+              <option value="sale">Sale</option>
+            </select>
+          </label>
+          <label>
+            Property type
+            <input name="property_type" required placeholder="Apartment" />
+          </label>
+          <label>
+            Locality
+            <input name="locality" required placeholder="Andheri West" />
+          </label>
+          <label>
+            City
+            <input name="city" required placeholder="Mumbai" />
           </label>
           <label>
             Price
-            <input name="price" type="number" min="1" required placeholder="1499" />
+            <input name="price" type="number" min="1" required placeholder="48000" />
           </label>
           <label>
-            Stock
-            <input name="stock" type="number" min="0" required placeholder="18" />
+            BHK
+            <input name="bhk" type="number" min="0" step="0.5" required placeholder="2" />
           </label>
           <label>
-            Sizes
-            <input name="sizes" placeholder="S, M, L, XL" />
+            Area sq ft
+            <input name="area_sqft" type="number" min="1" required placeholder="780" />
           </label>
           <label>
-            Colors
-            <input name="colors" placeholder="Black, White" />
+            Furnishing
+            <input name="furnishing" placeholder="Furnished" />
+          </label>
+          <label>
+            Availability
+            <input name="availability" placeholder="Immediate" />
+          </label>
+          <label class="wide">
+            Amenities
+            <input name="amenities" placeholder="Parking, Lift, Security, Metro nearby" />
           </label>
           <label class="wide">
             Description
-            <textarea name="description" rows="3" placeholder="Short product details for WhatsApp caption"></textarea>
+            <textarea name="description" rows="3" placeholder="Short property details for WhatsApp caption"></textarea>
           </label>
           <label class="wide">
-            Product photo
-            <input id="productImageInput" name="image_file" type="file" accept="image/png,image/jpeg,image/webp" />
+            Property photo
+            <input id="propertyImageInput" name="image_file" type="file" accept="image/png,image/jpeg,image/webp" />
           </label>
           <div class="wide image-preview" id="imagePreview" hidden>
-            <img id="imagePreviewImg" alt="Selected product preview" />
+            <img id="imagePreviewImg" alt="Selected property preview" />
             <span id="imagePreviewName"></span>
           </div>
         </div>
 
         <div class="dialog-actions">
           <button class="ghost-button" value="cancel" formmethod="dialog" type="submit">Cancel</button>
-          <button class="danger-button" id="deleteProductButton" type="button" hidden>Delete</button>
-          <button class="ghost-button" id="pauseProductButton" type="button" hidden>Pause</button>
-          <button class="primary-button" id="saveProductButton" type="submit">Publish listing</button>
+          <button class="danger-button" id="deletePropertyButton" type="button" hidden>Delete</button>
+          <button class="ghost-button" id="pausePropertyButton" type="button" hidden>Pause</button>
+          <button class="primary-button" id="savePropertyButton" type="submit">Publish property</button>
         </div>
       </form>
     </dialog>
