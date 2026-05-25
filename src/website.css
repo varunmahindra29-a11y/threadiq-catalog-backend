@@ -1,0 +1,743 @@
+/*
+ * EstateIQ - Premium real estate intelligence landing page
+ */
+
+:root {
+  --brand-primary: #4f46e5;
+  --brand-primary-hover: #3730a3;
+  --brand-primary-light: rgba(37, 99, 235, 0.08);
+  --brand-gold: #c9953a;
+  --brand-mint: #0f9f7a;
+  
+  --text-dark: #0f172a;          /* Slate-900 */
+  --text-muted: #64748b;         /* Slate-500 */
+  --text-quiet: #94a3b8;         /* Slate-400 */
+  --text-white: #ffffff;
+  
+  --bg-white: #ffffff;
+  --border-color: #e2e8f0;      /* Slate-200 */
+  
+  font-family: 'Outfit', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-white);
+  color: var(--text-dark);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Header & Navbar */
+.navbar {
+  position: sticky;
+  top: 0;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 100;
+  height: 80px;
+  display: flex;
+  align-items: center;
+}
+
+.nav-container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-dark);
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--brand-primary);
+  animation: rotate-slow 24s linear infinite;
+}
+
+@keyframes rotate-slow {
+  100% { transform: rotate(360deg); }
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.nav-link {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.nav-link:hover {
+  color: var(--brand-primary);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 0 24px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #5b5cf6 0%, #3b82f6 100%);
+  color: var(--text-white);
+  box-shadow: 0 14px 28px rgba(79, 70, 229, 0.26);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #4338ca 0%, #2563eb 100%);
+  box-shadow: 0 18px 34px rgba(79, 70, 229, 0.34);
+}
+
+.btn-ghost {
+  border-color: var(--border-color);
+  color: var(--text-dark);
+  background-color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.btn-ghost:hover {
+  background-color: #f8fafc;
+  border-color: var(--text-quiet);
+}
+
+.btn-text {
+  color: var(--text-dark);
+  font-weight: 600;
+  padding: 0 12px;
+}
+
+.btn-text:hover {
+  color: var(--brand-primary);
+}
+
+/* Full-Viewport Hero Section */
+.hero {
+  position: relative;
+  width: 100vw;
+  height: calc(100vh - 80px);
+  min-height: 680px;
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.84) 32%, rgba(255, 255, 255, 0.34) 68%, rgba(255, 255, 255, 0.08) 100%),
+    url('../product-images/estateiq_hero_bg.png');
+  background-size: cover;
+  background-position: center bottom;
+  display: grid;
+  grid-template-columns: 1.15fr 1.35fr;
+  align-items: center;
+  padding: 0 80px;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 36%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 248, 235, 0.72) 72%, rgba(255, 244, 214, 0.9) 100%);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  right: 5vw;
+  top: 9%;
+  width: 36vw;
+  height: 36vw;
+  max-width: 520px;
+  max-height: 520px;
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.18), rgba(15, 159, 122, 0.07) 46%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 540px;
+  z-index: 10;
+  padding-bottom: 40px;
+}
+
+.badge-ai {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background-color: var(--brand-primary-light);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  border-radius: 999px;
+  color: var(--brand-primary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 24px;
+  align-self: flex-start;
+}
+
+.hero-content h1 {
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  margin: 0 0 18px;
+}
+
+.hero-content h1 span.highlight {
+  color: var(--brand-primary);
+}
+
+.hero-content p {
+  font-size: 16px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0 0 32px;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 36px;
+}
+
+.hero-cta {
+  min-height: 48px;
+  padding: 0 28px;
+  font-size: 15px;
+}
+
+.hero-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.checklist-item svg {
+  color: var(--brand-primary);
+  flex: none;
+}
+
+/* Premium deal intelligence visual */
+.hero-visual {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 46px 0 84px;
+  z-index: 10;
+}
+
+.premium-composition {
+  position: relative;
+  width: min(620px, 100%);
+  min-height: 520px;
+}
+
+.premium-composition::before {
+  content: "";
+  position: absolute;
+  inset: 40px 42px 84px 56px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.08));
+  box-shadow: 0 34px 90px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(10px);
+}
+
+.property-showcase,
+.deal-panel,
+.market-card,
+.closing-card {
+  position: absolute;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.16);
+  backdrop-filter: blur(16px);
+}
+
+.property-showcase {
+  left: 24px;
+  top: 142px;
+  width: 322px;
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.property-image {
+  position: relative;
+  height: 200px;
+  background-image: linear-gradient(180deg, rgba(15, 23, 42, 0.04), rgba(15, 23, 42, 0.32)), url('../product-images/estateiq_hero_bg.png');
+  background-size: 760px auto;
+  background-position: 68% 39%;
+}
+
+.property-tag {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #3730a3;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.property-meta {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 18px;
+  padding: 18px;
+}
+
+.property-meta span,
+.panel-heading span,
+.signal-list span,
+.market-card span,
+.closing-card span,
+.market-card small,
+.closing-card small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.property-meta strong,
+.panel-heading strong,
+.signal-list strong,
+.market-card strong,
+.closing-card strong {
+  display: block;
+  color: var(--text-dark);
+  font-weight: 900;
+  margin-top: 3px;
+}
+
+.property-meta strong {
+  font-size: 24px;
+}
+
+.property-meta .positive,
+.signal-list strong {
+  color: var(--brand-mint);
+}
+
+.deal-panel {
+  right: 0;
+  top: 304px;
+  width: 270px;
+  border-radius: 8px;
+  padding: 20px;
+  z-index: 5;
+}
+
+.panel-heading {
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.panel-heading strong {
+  font-size: 20px;
+}
+
+.signal-list {
+  display: grid;
+  gap: 13px;
+  margin-top: 16px;
+}
+
+.signal-list div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.signal-list strong {
+  font-size: 16px;
+}
+
+.broker-orbit {
+  position: absolute;
+  right: 78px;
+  top: 50px;
+  width: 148px;
+  height: 148px;
+  z-index: 7;
+}
+
+.broker-avatar {
+  width: 138px;
+  height: 138px;
+  border-radius: 50%;
+  border: 5px solid rgba(255, 255, 255, 0.96);
+  background-image: url('../product-images/broker-avatar.png');
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.2);
+}
+
+.broker-status {
+  position: absolute;
+  right: 16px;
+  top: 22px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  background-color: #22c55e;
+}
+
+.voice-chip {
+  position: absolute;
+  right: 0;
+  bottom: 10px;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #ffffff;
+  background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+  border: 3px solid #ffffff;
+  box-shadow: 0 12px 30px rgba(79, 70, 229, 0.26);
+}
+
+.market-card,
+.closing-card {
+  border-radius: 8px;
+  padding: 16px 18px;
+}
+
+.market-card {
+  left: 0;
+  bottom: 58px;
+  width: 204px;
+  z-index: 6;
+}
+
+.market-card strong {
+  color: var(--brand-gold);
+  font-size: 32px;
+}
+
+.closing-card {
+  left: 252px;
+  top: 72px;
+  width: 230px;
+  z-index: 4;
+}
+
+.closing-card strong {
+  color: #3730a3;
+  font-size: 30px;
+}
+
+/* Staggered features list & sitemap footer styling */
+.social-proof {
+  padding: 60px 24px;
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+}
+
+.social-proof h2 {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 36px;
+  color: var(--text-dark);
+}
+
+.logos-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 30px 50px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.logo-item {
+  font-size: 18px;
+  font-weight: 700;
+  color: #94a3b8;
+  opacity: 0.65;
+}
+
+/* Multi-column footer */
+.sitemap {
+  background-color: #f8fafc;
+  padding: 80px 24px 60px;
+  border-top: 1px solid var(--border-color);
+}
+
+.sitemap-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 40px;
+}
+
+.sitemap-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sitemap-column h4 {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.sitemap-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sitemap-link {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.sitemap-link:hover {
+  color: var(--brand-primary);
+}
+
+@media (max-width: 1024px) {
+  .hero {
+    grid-template-columns: 1fr;
+    height: auto;
+    padding: 60px 32px 44px;
+    gap: 36px;
+  }
+  
+  .hero-content {
+    align-items: center;
+    text-align: center;
+    max-width: 100%;
+  }
+  
+  .badge-ai, .hero-checklist {
+    align-self: center;
+  }
+  
+  .hero-visual {
+    padding: 0;
+    min-height: 560px;
+  }
+
+  .premium-composition {
+    width: min(620px, 100%);
+  }
+  
+  .sitemap-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .nav-container {
+    padding: 0 18px;
+  }
+
+  .logo {
+    font-size: 21px;
+  }
+
+  .nav-actions {
+    display: none;
+  }
+
+  .sitemap-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hero {
+    min-height: auto;
+    padding: 42px 20px 34px;
+    gap: 26px;
+    background-position: 60% bottom;
+  }
+
+  .hero-content {
+    width: 100%;
+    min-width: 0;
+  }
+  
+  .hero-content h1 {
+    max-width: 100%;
+    font-size: 36px;
+    line-height: 1.04;
+  }
+
+  .hero-content p {
+    font-size: 15px;
+    max-width: 330px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+    max-width: 286px;
+    gap: 10px;
+  }
+
+  .hero-cta {
+    width: 100%;
+  }
+  
+  .navbar {
+    height: 70px;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+
+  .hero-visual {
+    min-height: 520px;
+  }
+
+  .premium-composition {
+    width: 350px;
+    max-width: calc(100vw - 40px);
+    min-height: 520px;
+  }
+
+  .premium-composition::before {
+    inset: 42px 8px 72px;
+  }
+
+  .property-showcase {
+    left: 0;
+    top: 142px;
+    width: min(312px, calc(100vw - 44px));
+  }
+
+  .property-image {
+    height: 182px;
+  }
+
+  .property-meta {
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .property-meta strong {
+    font-size: 20px;
+  }
+
+  .deal-panel {
+    left: 94px;
+    right: auto;
+    top: 328px;
+    width: 230px;
+    padding: 16px;
+  }
+
+  .panel-heading strong {
+    font-size: 18px;
+  }
+
+  .broker-orbit {
+    left: 204px;
+    right: auto;
+    top: 8px;
+    width: 116px;
+    height: 116px;
+  }
+
+  .broker-avatar {
+    width: 106px;
+    height: 106px;
+  }
+
+  .voice-chip {
+    width: 38px;
+    height: 38px;
+  }
+
+  .closing-card {
+    left: 158px;
+    right: auto;
+    top: 86px;
+    width: 156px;
+    padding: 13px 14px;
+  }
+
+  .closing-card strong,
+  .market-card strong {
+    font-size: 26px;
+  }
+
+  .market-card {
+    left: 8px;
+    bottom: 32px;
+    width: 172px;
+  }
+}

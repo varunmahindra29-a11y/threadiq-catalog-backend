@@ -729,10 +729,9 @@ function drawChart() {
   const max = Math.max(...data) + 8;
 
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, width, height);
 
-  ctx.strokeStyle = "#e4e7ec";
+  // Soft grid lines
+  ctx.strokeStyle = "rgba(148, 163, 184, 0.12)";
   ctx.lineWidth = 1;
   for (let i = 0; i < 5; i += 1) {
     const y = padding + ((height - padding * 2) / 4) * i;
@@ -748,9 +747,10 @@ function drawChart() {
     return { x, y, value };
   });
 
+  // Beautiful royal blue vertical gradient fill
   const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
-  gradient.addColorStop(0, "rgba(14, 124, 102, 0.22)");
-  gradient.addColorStop(1, "rgba(14, 124, 102, 0)");
+  gradient.addColorStop(0, "rgba(37, 99, 235, 0.16)");
+  gradient.addColorStop(1, "rgba(37, 99, 235, 0.00)");
 
   ctx.beginPath();
   points.forEach((point, index) => {
@@ -763,23 +763,25 @@ function drawChart() {
   ctx.fillStyle = gradient;
   ctx.fill();
 
+  // Smooth line curve outline
   ctx.beginPath();
   points.forEach((point, index) => {
     if (index === 0) ctx.moveTo(point.x, point.y);
     else ctx.lineTo(point.x, point.y);
   });
-  ctx.strokeStyle = "#0e7c66";
+  ctx.strokeStyle = "#2563eb";
   ctx.lineWidth = 4;
   ctx.lineJoin = "round";
   ctx.stroke();
 
+  // Draw node points
   points.forEach((point) => {
     ctx.beginPath();
-    ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+    ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
     ctx.fillStyle = "#ffffff";
     ctx.fill();
-    ctx.strokeStyle = "#0e7c66";
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#2563eb";
+    ctx.lineWidth = 3.5;
     ctx.stroke();
   });
 }
@@ -802,9 +804,9 @@ function formatPrice(property) {
 
 function formatCompactMoney(value) {
   const amount = Number(value || 0);
-  if (amount >= 10000000) return `${(amount / 10000000).toFixed(2)}Cr`;
-  if (amount >= 100000) return `${(amount / 100000).toFixed(2)}L`;
-  return amount.toLocaleString("en-IN");
+  if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(2)}Cr`;
+  if (amount >= 100000) return `₹${(amount / 100000).toFixed(2)}L`;
+  return `₹${amount.toLocaleString("en-IN")}`;
 }
 
 function bhkLabel(property) {
