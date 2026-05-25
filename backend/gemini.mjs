@@ -16,6 +16,8 @@ function compactProperty(property) {
   };
 }
 
+export const TECHNICAL_ISSUE_REPLY = "Hamari team abhi technical issue pe kaam kar rahi hai. Soon we will be live again.";
+
 function modelFallbacks(config) {
   return [...new Set([config.geminiModel, "gemini-2.5-flash-lite", "gemini-2.5-flash"].filter(Boolean))];
 }
@@ -70,7 +72,7 @@ export async function generateShortBrokerReply(config, { shop, customerMessage, 
     },
   });
 
-  return text || "Aap apni locality, budget, rent/sale aur visit timing bata do, main matching properties shortlist kar dunga.";
+  return text || TECHNICAL_ISSUE_REPLY;
 }
 
 export async function generatePropertyCaptions(config, { shop, properties, customerMessage }) {
@@ -137,5 +139,5 @@ export async function generateFallbackChatReply(config, customerMessage) {
       temperature: 0.75,
     },
   });
-  return text ? `${text}\n\n(${model})` : "Haan bhai, EstateIQ AI live hai. Locality, budget, rent/sale aur BHK bata do, main matching properties shortlist kar dunga.";
+  return text ? `${text}\n\n(${model})` : TECHNICAL_ISSUE_REPLY;
 }

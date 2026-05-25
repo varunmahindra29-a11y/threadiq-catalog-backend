@@ -1,5 +1,5 @@
 import { fallbackProperties, fallbackShop } from "./fallback-properties.mjs";
-import { generateFallbackChatReply, generatePropertyCaptions, generateShortBrokerReply } from "./gemini.mjs";
+import { generateFallbackChatReply, generatePropertyCaptions, generateShortBrokerReply, TECHNICAL_ISSUE_REPLY } from "./gemini.mjs";
 import { detectInterest, findShopByMessage, rankProperties } from "./matching.mjs";
 import { createLead, listPropertiesForShop, listShops, logWhatsappMessage } from "./supabase.mjs";
 import { sendImage, sendText } from "./whatsapp.mjs";
@@ -60,7 +60,7 @@ async function sendFallbackChat(config, message, reason) {
     reply = await generateFallbackChatReply(config, message.text);
   } catch (error) {
     console.error(`Gemini fallback chat failed: ${error.message}`);
-    reply = "EstateIQ AI abhi temporarily unavailable hai. Thodi der baad requirement dobara bhej dena.";
+    reply = TECHNICAL_ISSUE_REPLY;
   }
 
   await sendText(config, message.from, reply);
@@ -238,7 +238,7 @@ export async function handleWhatsappPayload(config, payload) {
     } catch (error) {
       console.error(`Message handling failed: ${error.message}`);
       try {
-        await sendText(config, message.from, "EstateIQ AI temporarily unavailable hai. Requirement thodi der baad dobara bhej dena.");
+        await sendText(config, message.from, TECHNICAL_ISSUE_REPLY);
       } catch (sendError) {
         console.error(`Fallback WhatsApp send failed: ${sendError.message}`);
       }
